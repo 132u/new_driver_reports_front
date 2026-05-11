@@ -1,3 +1,4 @@
+import 'package:driver_reports_app/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import '../core/api/auth_service.dart';
 import '../core/api/token_storage.dart';
@@ -15,20 +16,34 @@ class _LoginScreenState extends State<LoginScreen> {
   final tokenStorage = TokenStorage();
 
   void login() async {
-    final token = await authService.login(
-      emailController.text,
-      passwordController.text,
-    );
+  final result = await authService.login(
+    emailController.text,
+    passwordController.text,
+  );
 
-    if (token != null) {
-      await tokenStorage.saveToken(token);
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Неверный логин или пароль")),
-      );
-    }
+  if (result != null) {
+    final token = result.token;
+    final role = result.role;
+
+    await tokenStorage.saveToken(token);
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => HomeScreen(
+          token: token,
+          role: role,
+        ),
+      ),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Неверный логин или пароль"),
+      ),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
