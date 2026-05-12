@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'create_financial_operation_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -20,6 +20,50 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  void onMenuSelected(String value) {
+  switch (value) {
+    case 'report':
+      Navigator.pushNamed(
+        context,
+        '/create-report',
+      );
+      break;
+
+    case 'advance':
+      openFinancialOperation('Advance');
+      break;
+
+    case 'settlement':
+      openFinancialOperation('Settlement');
+      break;
+
+    case 'baseWork':
+      openFinancialOperation(
+        'BaseWorkPayment',
+      );
+      break;
+
+    case 'fuel':
+      openFinancialOperation(
+        'FuelExpense',
+      );
+      break;
+  }
+}
+
+void openFinancialOperation(String type) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) =>
+          CreateFinancialOperationScreen(
+        token: widget.token,
+        role: widget.role,
+        type: type,
+      ),
+    ),
+  );
+}
   static const String baseUrl =
       'http://10.0.2.2:5288/api';
 
@@ -166,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void openCreateReport() {
     Navigator.pushNamed(
       context,
-      '/create-report',
+      '/createReport',
     );
   }
 
@@ -188,10 +232,45 @@ class _HomeScreenState extends State<HomeScreen> {
               : 'Отчеты водителя',
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: openCreateReport,
-          ),
+          PopupMenuButton<String>(
+  icon: const Icon(Icons.add),
+  onSelected: onMenuSelected,
+  itemBuilder: (context) {
+    final items = <PopupMenuEntry<String>>[
+      const PopupMenuItem(
+        value: 'report',
+        child: Text('Создать отчет'),
+      ),
+
+      const PopupMenuItem(
+        value: 'settlement',
+        child: Text('Сдача денег'),
+      ),
+
+      const PopupMenuItem(
+        value: 'baseWork',
+        child: Text('Работа на базе'),
+      ),
+    ];
+
+    // Только admin
+    if (isAdmin) {
+      items.addAll([
+        const PopupMenuItem(
+          value: 'advance',
+          child: Text('Аванс'),
+        ),
+
+        const PopupMenuItem(
+          value: 'fuel',
+          child: Text('Топливо'),
+        ),
+      ]);
+    }
+
+    return items;
+  },
+),
         ],
       ),
       body: Padding(
