@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -67,12 +67,13 @@ class _CreateFinancialOperationScreenState
     if (response.statusCode == 200) {
       final List<dynamic> json =
           jsonDecode(response.body);
-print(json);
+
+//print(json);
       final result = json
           .map((e) => UserDto.fromJson(e))
-          .where((x) => x.role == 'Driver')
+          .where((x) => x.role == "1")
           .toList();
-print(json);
+//print(json);
       setState(() {
         drivers = result;
 
@@ -203,43 +204,47 @@ print(json);
         child: Column(
           children: [
             // ================= DRIVER SELECT =================
+            
             if (isAdmin)
+            
               DropdownButton<String>(
-                value: selectedDriverId,
-                isExpanded: true,
-                hint: const Text(
-                    'Выберите водителя'),
-                items: drivers.map((d) {
-                  return DropdownMenuItem(
-                    value: d.id,
-                    child:
-                        Text(d.userName),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedDriverId =
-                        value;
-                  });
-                },
-              ),
+  isExpanded: true,
+  value: selectedDriverId,
+  items: drivers.map((d) {
+    return DropdownMenuItem<String>(
+      value: d.id,
+      child: Text(d.userName),
+    );
+  }).toList(),
+  onChanged: drivers.isEmpty
+      ? null
+      : (value) {
+          setState(() {
+            selectedDriverId = value;
+          });
+        },
+),
 
             if (isAdmin)
               const SizedBox(height: 16),
 
             // ================= AMOUNT =================
-            TextField(
-              controller:
-                  amountController,
-              keyboardType:
-                  TextInputType.number,
-              decoration:
-                  const InputDecoration(
-                labelText: 'Сумма',
-                border:
-                    OutlineInputBorder(),
-              ),
-            ),
+            
+TextField(
+  controller: amountController,
+  keyboardType: const TextInputType.numberWithOptions(
+    decimal: true,
+  ),
+  inputFormatters: [
+    FilteringTextInputFormatter.allow(
+      RegExp(r'^\d*\.?\d*'),
+    ),
+  ],
+  decoration: const InputDecoration(
+    labelText: 'Сумма',
+    border: OutlineInputBorder(),
+  ),
+),
 
             const SizedBox(height: 16),
 
@@ -313,9 +318,14 @@ class UserDto {
 
   factory UserDto.fromJson(
       Map<String, dynamic> json) {
+
+//         print(json['role']);
+// print(json['role'].runtimeType);
+
     return UserDto(
       id: json['id'],
       userName: json['name'],
+ // role: List<String>.from(json['role'] ?? []),
       role: json['roles'].toString(),
     );
   }
