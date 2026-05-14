@@ -3,11 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-class CreateFinancialOperationScreen
-    extends StatefulWidget {
+class CreateFinancialOperationScreen extends StatefulWidget {
   final String token;
   final String role;
-final String type;
+  final String type;
   const CreateFinancialOperationScreen({
     super.key,
     required this.token,
@@ -16,21 +15,17 @@ final String type;
   });
 
   @override
-  State<CreateFinancialOperationScreen>
-      createState() =>
-          _CreateFinancialOperationScreenState();
+  State<CreateFinancialOperationScreen> createState() =>
+      _CreateFinancialOperationScreenState();
 }
 
 class _CreateFinancialOperationScreenState
     extends State<CreateFinancialOperationScreen> {
-  static const String baseUrl =
-      'http://10.0.2.2:5288/api';
+  static const String baseUrl = 'http://10.0.2.2:5288/api';
 
-  final amountController =
-      TextEditingController();
+  final amountController = TextEditingController();
 
-  final commentController =
-      TextEditingController();
+  final commentController = TextEditingController();
 
   DateTime selectedDate = DateTime.now();
 
@@ -40,8 +35,7 @@ class _CreateFinancialOperationScreenState
 
   String? selectedDriverId;
 
-  bool get isAdmin =>
-      widget.role == 'Admin';
+  bool get isAdmin => widget.role == 'Admin';
 
   @override
   void initState() {
@@ -59,27 +53,21 @@ class _CreateFinancialOperationScreenState
     final response = await http.get(
       Uri.parse('$baseUrl/users/all'),
       headers: {
-        'Authorization':
-            'Bearer ${widget.token}',
+        'Authorization': 'Bearer ${widget.token}',
       },
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> json =
-          jsonDecode(response.body);
-
-//print(json);
+      final List<dynamic> json = jsonDecode(response.body);
       final result = json
           .map((e) => UserDto.fromJson(e))
           .where((x) => x.role == "1")
           .toList();
-//print(json);
       setState(() {
         drivers = result;
 
         if (drivers.isNotEmpty) {
-          selectedDriverId =
-              drivers.first.id;
+          selectedDriverId = drivers.first.id;
         }
       });
     }
@@ -94,31 +82,19 @@ class _CreateFinancialOperationScreenState
     });
 
     final response = await http.post(
-      Uri.parse(
-          '$baseUrl/FinancialOperations'),
+      Uri.parse('$baseUrl/FinancialOperations'),
       headers: {
-        'Authorization':
-            'Bearer ${widget.token}',
-        'Content-Type':
-            'application/json',
+        'Authorization': 'Bearer ${widget.token}',
+        'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        "userId": isAdmin
-            ? selectedDriverId
-            : null,
-
-        "date": selectedDate
-            .toUtc()
-            .toIso8601String(),
-
+        "userId": isAdmin ? selectedDriverId : null,
+        "date": selectedDate.toUtc().toIso8601String(),
         "amount": double.parse(
           amountController.text,
         ),
-
         "type": getOperationType(),
-
-        "comment":
-            commentController.text,
+        "comment": commentController.text,
       }),
     );
 
@@ -128,12 +104,10 @@ class _CreateFinancialOperationScreenState
 
     if (!mounted) return;
 
-    if (response.statusCode == 200 ||
-        response.statusCode == 201) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Ошибка: ${response.statusCode}',
@@ -147,9 +121,7 @@ class _CreateFinancialOperationScreenState
   // ENUM MAP
   // =========================
   int getOperationType() {
-    switch (ModalRoute.of(context)!
-        .settings
-        .arguments) {
+    switch (ModalRoute.of(context)!.settings.arguments) {
       default:
         return 0;
     }
@@ -195,68 +167,61 @@ class _CreateFinancialOperationScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-            'Финансовая операция'),
+        title: const Text('Финансовая операция'),
       ),
       body: Padding(
-        padding:
-            const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             // ================= DRIVER SELECT =================
-            
-            if (isAdmin)
-            
-              DropdownButton<String>(
-  isExpanded: true,
-  value: selectedDriverId,
-  items: drivers.map((d) {
-    return DropdownMenuItem<String>(
-      value: d.id,
-      child: Text(d.userName),
-    );
-  }).toList(),
-  onChanged: drivers.isEmpty
-      ? null
-      : (value) {
-          setState(() {
-            selectedDriverId = value;
-          });
-        },
-),
 
             if (isAdmin)
-              const SizedBox(height: 16),
+              DropdownButton<String>(
+                isExpanded: true,
+                value: selectedDriverId,
+                items: drivers.map((d) {
+                  return DropdownMenuItem<String>(
+                    value: d.id,
+                    child: Text(d.userName),
+                  );
+                }).toList(),
+                onChanged: drivers.isEmpty
+                    ? null
+                    : (value) {
+                        setState(() {
+                          selectedDriverId = value;
+                        });
+                      },
+              ),
+
+            if (isAdmin) const SizedBox(height: 16),
 
             // ================= AMOUNT =================
-            
-TextField(
-  controller: amountController,
-  keyboardType: const TextInputType.numberWithOptions(
-    decimal: true,
-  ),
-  inputFormatters: [
-    FilteringTextInputFormatter.allow(
-      RegExp(r'^\d*\.?\d*'),
-    ),
-  ],
-  decoration: const InputDecoration(
-    labelText: 'Сумма',
-    border: OutlineInputBorder(),
-  ),
-),
+
+            TextField(
+              controller: amountController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(
+                  RegExp(r'^\d*\.?\d*'),
+                ),
+              ],
+              decoration: const InputDecoration(
+                labelText: 'Сумма',
+                border: OutlineInputBorder(),
+              ),
+            ),
 
             const SizedBox(height: 16),
 
             // ================= COMMENT =================
             TextField(
-              controller:
-                  commentController,
-              decoration:
-                  const InputDecoration(
+              controller: commentController,
+              decoration: const InputDecoration(
                 labelText: 'Комментарий',
-                border:
-                    OutlineInputBorder(),
+                border: OutlineInputBorder(),
               ),
             ),
 
@@ -272,8 +237,7 @@ TextField(
                 ),
                 ElevatedButton(
                   onPressed: pickDate,
-                  child: const Text(
-                      'Выбрать'),
+                  child: const Text('Выбрать'),
                 ),
               ],
             ),
@@ -285,13 +249,10 @@ TextField(
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: isLoading
-                    ? null
-                    : create,
+                onPressed: isLoading ? null : create,
                 child: isLoading
                     ? const CircularProgressIndicator()
-                    : const Text(
-                        'Создать'),
+                    : const Text('Создать'),
               ),
             ),
           ],
@@ -316,16 +277,10 @@ class UserDto {
     required this.role,
   });
 
-  factory UserDto.fromJson(
-      Map<String, dynamic> json) {
-
-//         print(json['role']);
-// print(json['role'].runtimeType);
-
+  factory UserDto.fromJson(Map<String, dynamic> json) {
     return UserDto(
       id: json['id'],
       userName: json['name'],
- // role: List<String>.from(json['role'] ?? []),
       role: json['roles'].toString(),
     );
   }

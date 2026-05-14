@@ -21,51 +21,50 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   void onMenuSelected(String value) {
-  switch (value) {
-    case 'report':
-      Navigator.pushNamed(
-        context,
-        '/create-report',
-      );
-      break;
+    switch (value) {
+      case 'report':
+        Navigator.pushNamed(
+          context,
+          '/create-report',
+        );
+        break;
 
-    case 'advance':
-      openFinancialOperation('Advance');
-      break;
+      case 'advance':
+        openFinancialOperation('Advance');
+        break;
 
-    case 'settlement':
-      openFinancialOperation('Settlement');
-      break;
+      case 'settlement':
+        openFinancialOperation('Settlement');
+        break;
 
-    case 'baseWork':
-      openFinancialOperation(
-        'BaseWorkPayment',
-      );
-      break;
+      case 'baseWork':
+        openFinancialOperation(
+          'BaseWorkPayment',
+        );
+        break;
 
-    case 'fuel':
-      openFinancialOperation(
-        'FuelExpense',
-      );
-      break;
+      case 'fuel':
+        openFinancialOperation(
+          'FuelExpense',
+        );
+        break;
+    }
   }
-}
 
-void openFinancialOperation(String type) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) =>
-          CreateFinancialOperationScreen(
-        token: widget.token,
-        role: widget.role,
-        type: type,
+  void openFinancialOperation(String type) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreateFinancialOperationScreen(
+          token: widget.token,
+          role: widget.role,
+          type: type,
+        ),
       ),
-    ),
-  );
-}
-  static const String baseUrl =
-      'http://10.0.2.2:5288/api';
+    );
+  }
+
+  static const String baseUrl = 'http://10.0.2.2:5288/api';
 
   bool get isAdmin => widget.role == 'Admin';
 
@@ -77,11 +76,9 @@ void openFinancialOperation(String type) {
 
   bool isLoading = false;
 
-  final List<int> months =
-      List.generate(12, (i) => i + 1);
+  final List<int> months = List.generate(12, (i) => i + 1);
 
-  final List<int> years =
-      List.generate(5, (i) => DateTime.now().year - i);
+  final List<int> years = List.generate(5, (i) => DateTime.now().year - i);
 
   // =====================================================
   // ADMIN
@@ -123,12 +120,9 @@ void openFinancialOperation(String type) {
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> json =
-          jsonDecode(response.body);
+      final List<dynamic> json = jsonDecode(response.body);
 
-      final result = json
-          .map((e) => UserDto.fromJson(e))
-          .toList();
+      final result = json.map((e) => UserDto.fromJson(e)).toList();
 
       setState(() {
         drivers = result;
@@ -176,8 +170,7 @@ void openFinancialOperation(String type) {
       final json = jsonDecode(response.body);
 
       setState(() {
-        summary =
-            DriverDailySummaryDto.fromJson(json);
+        summary = DriverDailySummaryDto.fromJson(json);
 
         isLoading = false;
       });
@@ -227,50 +220,45 @@ void openFinancialOperation(String type) {
           onPressed: logout,
         ),
         title: Text(
-          isAdmin
-              ? 'Панель администратора'
-              : 'Отчеты водителя',
+          isAdmin ? 'Панель администратора' : 'Отчеты водителя',
         ),
         actions: [
           PopupMenuButton<String>(
-  icon: const Icon(Icons.add),
-  onSelected: onMenuSelected,
-  itemBuilder: (context) {
-    final items = <PopupMenuEntry<String>>[
-      const PopupMenuItem(
-        value: 'report',
-        child: Text('Создать отчет'),
-      ),
+            icon: const Icon(Icons.add),
+            onSelected: onMenuSelected,
+            itemBuilder: (context) {
+              final items = <PopupMenuEntry<String>>[
+                const PopupMenuItem(
+                  value: 'report',
+                  child: Text('Создать отчет'),
+                ),
+                const PopupMenuItem(
+                  value: 'settlement',
+                  child: Text('Сдача денег'),
+                ),
+                const PopupMenuItem(
+                  value: 'baseWork',
+                  child: Text('Работа на базе'),
+                ),
+              ];
 
-      const PopupMenuItem(
-        value: 'settlement',
-        child: Text('Сдача денег'),
-      ),
+              // Только admin
+              if (isAdmin) {
+                items.addAll([
+                  const PopupMenuItem(
+                    value: 'advance',
+                    child: Text('Аванс'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'fuel',
+                    child: Text('Топливо'),
+                  ),
+                ]);
+              }
 
-      const PopupMenuItem(
-        value: 'baseWork',
-        child: Text('Работа на базе'),
-      ),
-    ];
-
-    // Только admin
-    if (isAdmin) {
-      items.addAll([
-        const PopupMenuItem(
-          value: 'advance',
-          child: Text('Аванс'),
-        ),
-
-        const PopupMenuItem(
-          value: 'fuel',
-          child: Text('Топливо'),
-        ),
-      ]);
-    }
-
-    return items;
-  },
-),
+              return items;
+            },
+          ),
         ],
       ),
       body: Padding(
@@ -296,8 +284,7 @@ void openFinancialOperation(String type) {
     return Wrap(
       spacing: 16,
       runSpacing: 16,
-      crossAxisAlignment:
-          WrapCrossAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         // =================================================
         // ADMIN DRIVER SELECT
@@ -397,8 +384,7 @@ void openFinancialOperation(String type) {
       );
     }
 
-    if (summary == null ||
-        summary!.rows.isEmpty) {
+    if (summary == null || summary!.rows.isEmpty) {
       return const Center(
         child: Text('Нет данных'),
       );
@@ -428,61 +414,44 @@ void openFinancialOperation(String type) {
                     formatDate(item.date),
                   ),
                 ),
-
                 DataCell(
                   Text(item.clientName ?? ''),
                 ),
-
                 DataCell(
                   Text(
                     item.cash?.toString() ?? '0',
                   ),
                 ),
-
                 DataCell(
                   Text(
-                    item.nonCashWithVat
-                            ?.toString() ??
-                        '0',
+                    item.nonCashWithVat?.toString() ?? '0',
                   ),
                 ),
-
                 DataCell(
                   Text(
-                    item.nonCashWithoutVat
-                            ?.toString() ??
-                        '0',
+                    item.nonCashWithoutVat?.toString() ?? '0',
                   ),
                 ),
-
                 DataCell(
                   Text(
                     item.fuel?.toString() ?? '0',
                   ),
                 ),
-
                 DataCell(
                   Text(
-                    item.advance?.toString() ??
-                        '0',
+                    item.advance?.toString() ?? '0',
                   ),
                 ),
-
                 DataCell(
                   Text(
-                    item.settlement
-                            ?.toString() ??
-                        '0',
+                    item.settlement?.toString() ?? '0',
                   ),
                 ),
-
                 DataCell(
                   Text(
-                    item.baseWork?.toString() ??
-                        '0',
+                    item.baseWork?.toString() ?? '0',
                   ),
                 ),
-
                 DataCell(
                   Text(
                     item.moneyHolder ?? '',
@@ -536,9 +505,7 @@ class DriverDailySummaryDto {
       driverId: json['driverId'],
       rows: (json['rows'] as List)
           .map(
-            (e) =>
-                DriverDailySummaryRowDto
-                    .fromJson(e),
+            (e) => DriverDailySummaryRowDto.fromJson(e),
           )
           .toList(),
     );
@@ -588,38 +555,15 @@ class DriverDailySummaryRowDto {
   ) {
     return DriverDailySummaryRowDto(
       date: json['date'],
-
       clientName: json['clientName'],
-
-      cash:
-          (json['cash'] as num?)?.toDouble(),
-
-      nonCashWithVat:
-          (json['nonCashWithVat'] as num?)
-              ?.toDouble(),
-
-      nonCashWithoutVat:
-          (json['nonCashWithoutVat']
-                  as num?)
-              ?.toDouble(),
-
-      fuel:
-          (json['fuel'] as num?)?.toDouble(),
-
-      advance:
-          (json['advance'] as num?)
-              ?.toDouble(),
-
-      settlement:
-          (json['settlement'] as num?)
-              ?.toDouble(),
-
-      baseWork:
-          (json['baseWork'] as num?)
-              ?.toDouble(),
-
-      moneyHolder:
-          json['moneyHolder']?.toString(),
+      cash: (json['cash'] as num?)?.toDouble(),
+      nonCashWithVat: (json['nonCashWithVat'] as num?)?.toDouble(),
+      nonCashWithoutVat: (json['nonCashWithoutVat'] as num?)?.toDouble(),
+      fuel: (json['fuel'] as num?)?.toDouble(),
+      advance: (json['advance'] as num?)?.toDouble(),
+      settlement: (json['settlement'] as num?)?.toDouble(),
+      baseWork: (json['baseWork'] as num?)?.toDouble(),
+      moneyHolder: json['moneyHolder']?.toString(),
     );
   }
 }

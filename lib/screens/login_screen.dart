@@ -16,34 +16,34 @@ class _LoginScreenState extends State<LoginScreen> {
   final tokenStorage = TokenStorage();
 
   void login() async {
-  final result = await authService.login(
-    emailController.text,
-    passwordController.text,
-  );
+    final result = await authService.login(
+      emailController.text,
+      passwordController.text,
+    );
 
-  if (result != null) {
-    final token = result.token;
-    final role = result.role;
+    if (result != null) {
+      final token = result.token;
+      final role = result.role;
 
-    await tokenStorage.saveToken(token);
+      await tokenStorage.saveToken(token);
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => HomeScreen(
-          token: token,
-          role: role,
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => HomeScreen(
+            token: token,
+            role: role,
+          ),
         ),
-      ),
-    );
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Неверный логин или пароль"),
-      ),
-    );
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Неверный логин или пароль"),
+        ),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
