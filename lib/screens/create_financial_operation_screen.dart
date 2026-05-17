@@ -121,10 +121,7 @@ class _CreateFinancialOperationScreenState
   // ENUM MAP
   // =========================
   int getOperationType() {
-    switch (ModalRoute.of(context)!.settings.arguments) {
-      default:
-        return 0;
-    }
+    return typeFromString(widget.type);
   }
 
   int typeFromString(String type) {

@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:driver_reports_app/screens/report_details_screen.dart';
+
 import 'create_financial_operation_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -390,83 +392,133 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    return Card(
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          columns: const [
-            DataColumn(label: Text('Дата')),
-            DataColumn(label: Text('Клиент')),
-            DataColumn(label: Text('Нал')),
-            DataColumn(label: Text('Безнал НДС')),
-            DataColumn(label: Text('Безнал')),
-            DataColumn(label: Text('Топливо')),
-            DataColumn(label: Text('Аванс')),
-            DataColumn(label: Text('Сдал')),
-            DataColumn(label: Text('База')),
-            DataColumn(label: Text('У кого')),
-          ],
-          rows: summary!.rows.map((item) {
-            return DataRow(
-              cells: [
-                DataCell(
+    return ListView.builder(
+      itemCount: summary!.rows.length,
+      itemBuilder: (context, index) {
+        final item = summary!.rows[index];
+
+        return InkWell(
+          onTap: () {
+            Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (_) => ReportDetailsScreen(
+      reportId: item.reportId,
+      token: widget.token,
+    ),
+  ),
+);
+          },
+          child: Card(
+            margin: const EdgeInsets.only(
+              bottom: 12,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ================= DATE =================
+
                   Text(
                     formatDate(item.date),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
                   ),
-                ),
-                DataCell(
-                  Text(item.clientName ?? ''),
-                ),
-                DataCell(
+
+                  const SizedBox(height: 8),
+
+                  // ================= CLIENT =================
+
                   Text(
-                    item.cash?.toString() ?? '0',
+                    item.clientName ?? '',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                DataCell(
-                  Text(
-                    item.nonCashWithVat?.toString() ?? '0',
+
+                  const SizedBox(height: 16),
+
+                  // ================= MONEY =================
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: buildInfoBlock(
+                          'Наличные',
+                          item.cash,
+                        ),
+                      ),
+                      Expanded(
+                        child: buildInfoBlock(
+                          'Безнал НДС',
+                          item.nonCashWithVat,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                DataCell(
-                  Text(
-                    item.nonCashWithoutVat?.toString() ?? '0',
+
+                  const SizedBox(height: 16),
+
+                  // ================= MONEY HOLDER =================
+
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.account_circle,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        item.moneyHolder ?? '',
+                        style: const TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                DataCell(
-                  Text(
-                    item.fuel?.toString() ?? '0',
-                  ),
-                ),
-                DataCell(
-                  Text(
-                    item.advance?.toString() ?? '0',
-                  ),
-                ),
-                DataCell(
-                  Text(
-                    item.settlement?.toString() ?? '0',
-                  ),
-                ),
-                DataCell(
-                  Text(
-                    item.baseWork?.toString() ?? '0',
-                  ),
-                ),
-                DataCell(
-                  Text(
-                    item.moneyHolder ?? '',
-                  ),
-                ),
-              ],
-            );
-          }).toList(),
-        ),
-      ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
-  // =====================================================
-  // HELPERS
+// =====================================================
+// INFO BLOCK
+// =====================================================
+
+  Widget buildInfoBlock(
+    String title,
+    double? value,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.grey,
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          (value ?? 0).toStringAsFixed(2),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+// HELPERS
   // =====================================================
 
   String formatDate(String date) {
@@ -517,6 +569,7 @@ class DriverDailySummaryDto {
 // =====================================================
 
 class DriverDailySummaryRowDto {
+    final String reportId;
   final String date;
 
   final String? clientName;
@@ -538,6 +591,7 @@ class DriverDailySummaryRowDto {
   final String? moneyHolder;
 
   DriverDailySummaryRowDto({
+   required this.reportId,
     required this.date,
     this.clientName,
     this.cash,
@@ -554,6 +608,7 @@ class DriverDailySummaryRowDto {
     Map<String, dynamic> json,
   ) {
     return DriverDailySummaryRowDto(
+      reportId: json['reportId'],
       date: json['date'],
       clientName: json['clientName'],
       cash: (json['cash'] as num?)?.toDouble(),

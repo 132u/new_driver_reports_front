@@ -1,228 +1,437 @@
-import 'package:driver_reports_app/screens/full_screen_image.dart';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-const String baseUrl = "https://localhost:7289";
+class ReportDetailsScreen extends StatefulWidget {
+  final String reportId;
 
-class ReportDetailsScreen extends StatelessWidget {
-  final Map report;
+  final String token;
 
-  const ReportDetailsScreen({super.key, required this.report});
+  const ReportDetailsScreen({
+    super.key,
+    required this.reportId,
+    required this.token,
+  });
 
-  String _formatDate(String? date) {
-    if (date == null) return "";
-    return date.split("T")[0];
+  @override
+  State<ReportDetailsScreen> createState() =>
+      _ReportDetailsScreenState();
+}
+
+class _ReportDetailsScreenState
+    extends State<ReportDetailsScreen> {
+  static const String baseUrl =
+      'http://10.0.2.2:5288/api';
+
+  ReportDetailsDto? report;
+
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    loadReport();
   }
 
-  String paymentTypeToString(int value) {
-    switch (value) {
-      case 0:
-        return "Cash";
-      case 1:
-        return "Cashless with VAT";
-      case 2:
-        return "Cashless without VAT";
-      default:
-        return "Unknown";
+  // =====================================================
+  // LOAD REPORT
+  // =====================================================
+
+  Future<void> loadReport() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final response = await http.get(
+      Uri.parse(
+        '$baseUrl/reports/${widget.reportId}',
+      ),
+      headers: {
+        'Authorization':
+            'Bearer ${widget.token}',
+      },
+    );
+
+    if (!mounted) return;
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+
+      setState(() {
+        report = ReportDetailsDto.fromJson(
+          json,
+        );
+
+        isLoading = false;
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        SnackBar(
+          content: Text(
+            'Ошибка: ${response.statusCode}',
+          ),
+        ),
+      );
     }
   }
 
-  String moneyHolderToString(int value, String driverName) {
-    switch (value) {
-      case 0:
-        return driverName;
-      case 1:
-        return "Viktor";
-      default:
-        return "Unknown";
-    }
-  }
+  // =====================================================
+  // UI
+  // =====================================================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Детали отчета"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              // TODO: экран редактирования
-            },
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 📄 ОСНОВНАЯ КАРТОЧКА
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildRow("📅 Дата", _formatDate(report["reportDate"])),
-                  _buildRow("👤 Водитель", report["driverName"] ?? ""),
-                  _buildRow("🧾 Заказчик", report["clientName"] ?? ""),
-                  _buildRow("💰 Сумма", "${report["price"] ?? 0} ₽"),
-                  _buildRow(
-                    "💳 Тип платежа",
-                    paymentTypeToString(report["paymentType"]),
-                  ),
-                  _buildRow(
-                    "👛 Деньги у",
-                    moneyHolderToString(
-                      report["moneyHolder"],
-                      report["driverName"],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // 📝 ОПИСАНИЕ
-            if (report["description"] != null &&
-                report["description"].toString().isNotEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black12, blurRadius: 10),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Описание",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(report["description"]),
-                  ],
-                ),
-              ),
-
-            const SizedBox(height: 20),
-
-            // 📷 ФОТО (несколько)
-            Builder(
-              builder: (context) {
-                print(report["imagePaths"]);
-//print(baseUrl + report["imagePaths"][0]);
-
-                final images = report["imagePaths"] as List?;
-                print(images);
-
-                if (images != null && images is List && images.isNotEmpty) {
-                  print(baseUrl + images[0]);
-                } else {
-                  print("NO IMAGES");
-                }
-                if (images == null || images.isEmpty) {
-                  return const SizedBox();
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Фото",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 220,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: images.length,
-                        itemBuilder: (context, index) {
-                          final imageUrl = images[index];
-
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => FullScreenImage(
-                                    imageUrl: baseUrl + imageUrl,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Hero(
-                              tag: imageUrl,
-                              child: Container(
-                                margin: const EdgeInsets.only(right: 10),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Image.network(
-                                    baseUrl + imageUrl,
-                                    width: 250,
-                                    height: 220,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            // ✏️ КНОПКА РЕДАКТИРОВАНИЯ
-            // SizedBox(
-            //   width: double.infinity,
-            //   height: 45,
-            //   child: ElevatedButton.icon(
-            //     onPressed: () {
-            //       // TODO: экран редактирования
-            //     },
-            //     icon: const Icon(Icons.edit),
-            //     label: const Text("Редактировать отчет"),
-            //   ),
-            // ),
-          ],
+        title: const Text(
+          'Детали отчета',
         ),
       ),
+
+      body: buildBody(),
     );
   }
 
-  Widget _buildRow(String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget buildBody() {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (report == null) {
+      return const Center(
+        child: Text('Нет данных'),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+
         children: [
-          Text(title, style: const TextStyle(color: Colors.grey)),
+          // ================= CLIENT =================
+
           Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.w500),
+            report!.clientName,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            formatDate(report!.date),
+            style: const TextStyle(
+              color: Colors.grey,
+              fontSize: 16,
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ================= MONEY =================
+
+          Row(
+            children: [
+              Expanded(
+                child: buildMoneyCard(
+                  'Наличные',
+                  report!.cash,
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: buildMoneyCard(
+                  'Безнал НДС',
+                  report!.nonCashWithVat,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // ================= MONEY HOLDER =================
+
+          buildInfoRow(
+            Icons.account_circle,
+            'У кого деньги',
+            report!.moneyHolder,
+          ),
+
+          const SizedBox(height: 16),
+
+          // ================= COMMENT =================
+
+          if (report!.comment != null &&
+              report!.comment!.isNotEmpty)
+            Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+
+              children: [
+                const Text(
+                  'Комментарий',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.all(
+                    16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius:
+                        BorderRadius.circular(
+                      12,
+                    ),
+                  ),
+                  child: Text(
+                    report!.comment!,
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+              ],
+            ),
+
+          // ================= PHOTOS =================
+
+          if (report!.photos.isNotEmpty)
+            Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+
+              children: [
+                const Text(
+                  'Фотографии',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                SizedBox(
+                  height: 220,
+
+                  child: ListView.builder(
+                    scrollDirection:
+                        Axis.horizontal,
+
+                    itemCount:
+                        report!.photos.length,
+
+                    itemBuilder:
+                        (context, index) {
+                      final photo =
+                          report!.photos[index];
+
+                      return Padding(
+                        padding:
+                            const EdgeInsets.only(
+                          right: 12,
+                        ),
+
+                        child: ClipRRect(
+                          borderRadius:
+                              BorderRadius.circular(
+                            12,
+                          ),
+
+                          child: Image.network(
+                            photo,
+                            width: 220,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  // =====================================================
+  // HELPERS
+  // =====================================================
+
+  Widget buildMoneyCard(
+    String title,
+    double? amount,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius:
+            BorderRadius.circular(16),
+      ),
+
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.grey,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            (amount ?? 0).toStringAsFixed(2),
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
     );
   }
+
+  Widget buildInfoRow(
+    IconData icon,
+    String title,
+    String value,
+  ) {
+    return Row(
+      children: [
+        Icon(icon),
+
+        const SizedBox(width: 12),
+
+        Expanded(
+          child: Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
+
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String formatDate(String date) {
+    final parsed = DateTime.parse(date);
+
+    return '${parsed.day}.${parsed.month}.${parsed.year}';
+  }
+}
+
+// =====================================================
+// DTO
+// =====================================================
+
+class ReportDetailsDto {
+  final String id;
+
+  final String date;
+
+  final String clientName;
+
+  final double? cash;
+
+  final double? nonCashWithVat;
+
+  final String moneyHolder;
+
+  final String? comment;
+
+  final List<String> photos;
+
+  ReportDetailsDto({
+    required this.id,
+    required this.date,
+    required this.clientName,
+    required this.cash,
+    required this.nonCashWithVat,
+    required this.moneyHolder,
+    this.comment,
+    required this.photos,
+  });
+
+factory ReportDetailsDto.fromJson(
+  Map<String, dynamic> json,
+) {
+  return ReportDetailsDto(
+    id: json['id'],
+
+    date: json['reportDate'],
+
+    clientName:
+        json['clientName'] ?? '',
+
+    cash: json['paymentType'] == 0
+        ? (json['price'] as num?)?.toDouble()
+        : 0,
+
+    nonCashWithVat:
+        json['paymentType'] == 1
+            ? (json['price'] as num?)?.toDouble()
+            : 0,
+
+    moneyHolder:
+        json['moneyHolder']
+            ?.toString() ??
+        '',
+
+    comment:
+        json['description'] ?? '',
+
+    photos: List<String>.from(
+      json['imagePaths'] ?? [],
+    ),
+  );
+}
+
 }

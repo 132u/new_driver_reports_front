@@ -63,7 +63,7 @@ class AuthService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return true;
     } else {
-      print("Register error: ${response.body}");
+      //print("Register error: ${response.body}");
       return false;
     }
   }
