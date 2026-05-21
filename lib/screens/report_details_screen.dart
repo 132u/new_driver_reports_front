@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -21,9 +22,11 @@ class ReportDetailsScreen extends StatefulWidget {
 
 class _ReportDetailsScreenState
     extends State<ReportDetailsScreen> {
-  static const String baseUrl =
-      'http://10.0.2.2:5288/api';
-
+  // static const String baseUrl =
+  //     'http://10.0.2.2:5288/api';
+final String baseUrl = kIsWeb
+    ? 'http://localhost:5288/api'
+    : 'http://10.0.2.2:5288/api';
   ReportDetailsDto? report;
 
   bool isLoading = false;

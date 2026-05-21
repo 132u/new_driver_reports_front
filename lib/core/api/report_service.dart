@@ -41,7 +41,7 @@ class ReportService {
     final tokenStorage = TokenStorage();
     final token = await tokenStorage.getToken();
     final response =
-        await _client.post("/api/reports", body: jsonEncode(data), headers: {
+        await _client.post("/reports", body: jsonEncode(data), headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
     });
@@ -59,7 +59,7 @@ class ReportService {
 
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse(_client.baseUrl + "/api/files/upload"),
+      Uri.parse(_client.baseUrl + "/files/upload"),
     );
 
     request.headers['Authorization'] = 'Bearer $token';

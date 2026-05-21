@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:driver_reports_app/screens/report_details_screen.dart';
 
@@ -66,15 +67,17 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  static const String baseUrl = 'http://10.0.2.2:5288/api';
-
+  //static const String baseUrl = 'http://10.0.2.2:5288/api';
+final String baseUrl = kIsWeb
+    ? 'http://localhost:5288/api'
+    : 'http://10.0.2.2:5288/api';
   bool get isAdmin => widget.role == 'Admin';
 
   int selectedMonth = DateTime.now().month;
 
   int selectedYear = DateTime.now().year;
 
-  DriverDailySummaryDto? summary;
+  List<ReportDto> reports = [];
 
   bool isLoading = false;
 
@@ -140,57 +143,63 @@ class _HomeScreenState extends State<HomeScreen> {
   // LOAD SUMMARY
   // =====================================================
 
-  Future<void> loadSummary() async {
-    setState(() {
-      isLoading = true;
-    });
+ Future<void> loadSummary() async {
+  setState(() {
+    isLoading = true;
+  });
 
-    Uri uri;
+  Uri uri;
 
-    if (isAdmin) {
-      uri = Uri.parse(
-        '$baseUrl/driver-summaries/$selectedDriverId/details'
-        '?year=$selectedYear&month=$selectedMonth',
-      );
-    } else {
-      uri = Uri.parse(
-        '$baseUrl/driver-summaries/my/details'
-        '?year=$selectedYear&month=$selectedMonth',
-      );
-    }
-
-    final response = await http.get(
-      uri,
-      headers: {
-        'Authorization': 'Bearer ${widget.token}',
-      },
+  if (isAdmin) {
+    uri = Uri.parse(
+      '$baseUrl/reports/driver/$selectedDriverId'
+      '?year=$selectedYear&month=$selectedMonth',
     );
-
-    if (!mounted) return;
-
-    if (response.statusCode == 200) {
-      final json = jsonDecode(response.body);
-
-      setState(() {
-        summary = DriverDailySummaryDto.fromJson(json);
-
-        isLoading = false;
-      });
-    } else {
-      setState(() {
-        isLoading = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Ошибка: ${response.statusCode}',
-          ),
-        ),
-      );
-    }
+  } else {
+    uri = Uri.parse(
+      '$baseUrl/reports/my'
+      '?year=$selectedYear&month=$selectedMonth',
+    );
   }
 
+  final response = await http.get(
+    uri,
+    headers: {
+      'Authorization':
+          'Bearer ${widget.token}',
+    },
+  );
+
+  if (!mounted) return;
+
+  if (response.statusCode == 200) {
+    final List<dynamic> json =
+        jsonDecode(response.body);
+
+    setState(() {
+      reports = json
+          .map(
+            (e) => ReportDto.fromJson(e),
+          )
+          .toList();
+
+      isLoading = false;
+    });
+  } else {
+    setState(() {
+      isLoading = false;
+    });
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+      SnackBar(
+        content: Text(
+          'Ошибка: ${response.statusCode}',
+        ),
+      ),
+    );
+  }
+}
   // =====================================================
   // ACTIONS
   // =====================================================
@@ -378,117 +387,119 @@ class _HomeScreenState extends State<HomeScreen> {
   // =====================================================
   // TABLE
   // =====================================================
-
-  Widget buildTable() {
-    if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
-    if (summary == null || summary!.rows.isEmpty) {
-      return const Center(
-        child: Text('Нет данных'),
-      );
-    }
-
-    return ListView.builder(
-      itemCount: summary!.rows.length,
-      itemBuilder: (context, index) {
-        final item = summary!.rows[index];
-
-        return InkWell(
-          onTap: () {
-            Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (_) => ReportDetailsScreen(
-      reportId: item.reportId,
-      token: widget.token,
-    ),
-  ),
-);
-          },
-          child: Card(
-            margin: const EdgeInsets.only(
-              bottom: 12,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ================= DATE =================
-
-                  Text(
-                    formatDate(item.date),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // ================= CLIENT =================
-
-                  Text(
-                    item.clientName ?? '',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // ================= MONEY =================
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: buildInfoBlock(
-                          'Наличные',
-                          item.cash,
-                        ),
-                      ),
-                      Expanded(
-                        child: buildInfoBlock(
-                          'Безнал НДС',
-                          item.nonCashWithVat,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // ================= MONEY HOLDER =================
-
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.account_circle,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        item.moneyHolder ?? '',
-                        style: const TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+Widget buildTable() {
+  if (isLoading) {
+    return const Center(
+      child: CircularProgressIndicator(),
     );
   }
 
+  if (reports.isEmpty) {
+    return const Center(
+      child: Text('Нет отчетов'),
+    );
+  }
+
+  return ListView.builder(
+    itemCount: reports.length,
+    itemBuilder: (context, index) {
+      final item = reports[index];
+
+      return InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  ReportDetailsScreen(
+                reportId: item.id,
+                token: widget.token,
+              ),
+            ),
+          );
+        },
+        child: Card(
+          margin: const EdgeInsets.only(
+            bottom: 12,
+          ),
+          child: Padding(
+            padding:
+                const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  formatDate(
+                    item.reportDate,
+                  ),
+                  style: const TextStyle(
+                    color: Colors.grey,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  item.clientName,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: buildInfoBlock(
+                        'Наличные',
+                        item.paymentType == 0
+                            ? item.price
+                            : 0,
+                      ),
+                    ),
+
+                    Expanded(
+                      child: buildInfoBlock(
+                        'Безнал НДС',
+                        item.paymentType == 1
+                            ? item.price
+                            : 0,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.account_circle,
+                    ),
+
+                    const SizedBox(
+                      width: 8,
+                    ),
+
+                    Text(
+                      item.moneyHolder == 0
+                          ? 'У водителя'
+                          : 'У фирмы',
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
 // =====================================================
 // INFO BLOCK
 // =====================================================
@@ -532,97 +543,54 @@ class _HomeScreenState extends State<HomeScreen> {
 // DTO
 // =====================================================
 
-class DriverDailySummaryDto {
-  final int year;
-
-  final int month;
-
-  final String driverId;
-
-  final List<DriverDailySummaryRowDto> rows;
-
-  DriverDailySummaryDto({
-    required this.year,
-    required this.month,
-    required this.driverId,
-    required this.rows,
-  });
-
-  factory DriverDailySummaryDto.fromJson(
-    Map<String, dynamic> json,
-  ) {
-    return DriverDailySummaryDto(
-      year: json['year'],
-      month: json['month'],
-      driverId: json['driverId'],
-      rows: (json['rows'] as List)
-          .map(
-            (e) => DriverDailySummaryRowDto.fromJson(e),
-          )
-          .toList(),
-    );
-  }
-}
-
 // =====================================================
 // ROW DTO
 // =====================================================
+class ReportDto {
+  final String id;
 
-class DriverDailySummaryRowDto {
-    final String reportId;
-  final String date;
+  final String reportDate;
 
-  final String? clientName;
+  final String clientName;
 
-  final double? cash;
+  final double price;
 
-  final double? nonCashWithVat;
+  final int paymentType;
 
-  final double? nonCashWithoutVat;
+  final int moneyHolder;
 
-  final double? fuel;
-
-  final double? advance;
-
-  final double? settlement;
-
-  final double? baseWork;
-
-  final String? moneyHolder;
-
-  DriverDailySummaryRowDto({
-   required this.reportId,
-    required this.date,
-    this.clientName,
-    this.cash,
-    this.nonCashWithVat,
-    this.nonCashWithoutVat,
-    this.fuel,
-    this.advance,
-    this.settlement,
-    this.baseWork,
-    this.moneyHolder,
+  ReportDto({
+    required this.id,
+    required this.reportDate,
+    required this.clientName,
+    required this.price,
+    required this.paymentType,
+    required this.moneyHolder,
   });
 
-  factory DriverDailySummaryRowDto.fromJson(
+  factory ReportDto.fromJson(
     Map<String, dynamic> json,
   ) {
-    return DriverDailySummaryRowDto(
-      reportId: json['reportId'],
-      date: json['date'],
-      clientName: json['clientName'],
-      cash: (json['cash'] as num?)?.toDouble(),
-      nonCashWithVat: (json['nonCashWithVat'] as num?)?.toDouble(),
-      nonCashWithoutVat: (json['nonCashWithoutVat'] as num?)?.toDouble(),
-      fuel: (json['fuel'] as num?)?.toDouble(),
-      advance: (json['advance'] as num?)?.toDouble(),
-      settlement: (json['settlement'] as num?)?.toDouble(),
-      baseWork: (json['baseWork'] as num?)?.toDouble(),
-      moneyHolder: json['moneyHolder']?.toString(),
+    return ReportDto(
+      id: json['id'],
+
+      reportDate: json['reportDate'],
+
+      clientName:
+          json['clientName'] ?? '',
+
+      price:
+          (json['price'] as num)
+              .toDouble(),
+
+      paymentType:
+          json['paymentType'] ?? 0,
+
+      moneyHolder:
+          json['moneyHolder'] ?? 0,
     );
   }
 }
-
 // =====================================================
 // USER DTO
 // =====================================================

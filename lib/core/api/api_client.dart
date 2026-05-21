@@ -1,8 +1,11 @@
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:flutter/foundation.dart';
 class ApiClient {
-  final String baseUrl = "http://10.0.2.2:5288";
+ // final String baseUrl = "http://10.0.2.2:5288";
+  final String baseUrl = kIsWeb
+    ? 'http://localhost:5288/api'
+    : 'http://10.0.2.2:5288/api';
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString("jwt");

@@ -2,17 +2,20 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/login_result.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthService {
-  final String baseUrl = "http://10.0.2.2:5288";
+//  final String baseUrl = "http://10.0.2.2:5288";
   // ⚠️ emulator = 10.0.2.2
-
+ final String baseUrl = kIsWeb
+    ? 'http://localhost:5288/api'
+    : 'http://10.0.2.2:5288/api';
   Future<LoginResult?> login(
     String email,
     String password,
   ) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/api/auth/login'),
+      Uri.parse('$baseUrl/auth/login'),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -46,7 +49,7 @@ class AuthService {
   }
 
   Future<bool> register(String name, String email, String password) async {
-    final url = Uri.parse("$baseUrl/api/auth/register");
+    final url = Uri.parse("$baseUrl/auth/register");
 
     final response = await http.post(
       url,
