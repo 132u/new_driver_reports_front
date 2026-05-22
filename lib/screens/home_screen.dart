@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import '../core/constants/api_constants.dart';
 import 'dart:convert';
 import 'package:driver_reports_app/screens/report_details_screen.dart';
 
@@ -67,10 +67,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  //static const String baseUrl = 'http://10.0.2.2:5288/api';
-final String baseUrl = kIsWeb
-    ? 'http://localhost:5288/api'
-    : 'http://10.0.2.2:5288/api';
   bool get isAdmin => widget.role == 'Admin';
 
   int selectedMonth = DateTime.now().month;
@@ -118,7 +114,7 @@ final String baseUrl = kIsWeb
 
   Future<void> loadDrivers() async {
     final response = await http.get(
-      Uri.parse('$baseUrl/users/drivers'),
+      Uri.parse('${ApiConstants.baseUrl}/users/drivers'),
       headers: {
         'Authorization': 'Bearer ${widget.token}',
       },
@@ -152,12 +148,12 @@ final String baseUrl = kIsWeb
 
   if (isAdmin) {
     uri = Uri.parse(
-      '$baseUrl/reports/driver/$selectedDriverId'
+      '${ApiConstants.baseUrl}/reports/driver/$selectedDriverId'
       '?year=$selectedYear&month=$selectedMonth',
     );
   } else {
     uri = Uri.parse(
-      '$baseUrl/reports/my'
+      '${ApiConstants.baseUrl}/reports/my'
       '?year=$selectedYear&month=$selectedMonth',
     );
   }

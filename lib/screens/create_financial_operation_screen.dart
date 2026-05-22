@@ -1,3 +1,4 @@
+import '../core/constants/api_constants.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
@@ -22,10 +23,7 @@ class CreateFinancialOperationScreen extends StatefulWidget {
 
 class _CreateFinancialOperationScreenState
     extends State<CreateFinancialOperationScreen> {
- // static const String baseUrl = 'http://10.0.2.2:5288/api';
- final String baseUrl = kIsWeb
-    ? 'http://localhost:5288/api'
-    : 'http://10.0.2.2:5288/api';
+
   final amountController = TextEditingController();
 
   final commentController = TextEditingController();
@@ -54,7 +52,7 @@ class _CreateFinancialOperationScreenState
   // =========================
   Future<void> loadDrivers() async {
     final response = await http.get(
-      Uri.parse('$baseUrl/users/all'),
+      Uri.parse('${ApiConstants.baseUrl}/users/all'),
       headers: {
         'Authorization': 'Bearer ${widget.token}',
       },
@@ -85,7 +83,7 @@ class _CreateFinancialOperationScreenState
     });
 
     final response = await http.post(
-      Uri.parse('$baseUrl/financial-operations'),
+      Uri.parse('${ApiConstants.baseUrl}/financial-operations'),
       headers: {
         'Authorization': 'Bearer ${widget.token}',
         'Content-Type': 'application/json',

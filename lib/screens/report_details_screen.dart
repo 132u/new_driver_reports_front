@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart';
+import '../core/constants/api_constants.dart';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -22,11 +21,6 @@ class ReportDetailsScreen extends StatefulWidget {
 
 class _ReportDetailsScreenState
     extends State<ReportDetailsScreen> {
-  // static const String baseUrl =
-  //     'http://10.0.2.2:5288/api';
-final String baseUrl = kIsWeb
-    ? 'http://localhost:5288/api'
-    : 'http://10.0.2.2:5288/api';
   ReportDetailsDto? report;
 
   bool isLoading = false;
@@ -49,7 +43,7 @@ final String baseUrl = kIsWeb
 
     final response = await http.get(
       Uri.parse(
-        '$baseUrl/reports/${widget.reportId}',
+        '${ApiConstants.baseUrl}/reports/${widget.reportId}',
       ),
       headers: {
         'Authorization':

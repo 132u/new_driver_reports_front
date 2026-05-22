@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import '../core/constants/api_constants.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -25,11 +25,6 @@ class FinancialOperationsScreen
 
 class _FinancialOperationsScreenState
     extends State<FinancialOperationsScreen> {
-  // static const String baseUrl =
-  //     'http://10.0.2.2:5288/api';
-final String baseUrl = kIsWeb
-    ? 'http://localhost:5288/api'
-    : 'http://10.0.2.2:5288/api';
   bool get isAdmin =>
       widget.role == 'Admin';
 
@@ -91,7 +86,7 @@ final String baseUrl = kIsWeb
 
   Future<void> loadDrivers() async {
     final response = await http.get(
-      Uri.parse('$baseUrl/users/drivers'),
+      Uri.parse('${ApiConstants.baseUrl}/users/drivers'),
       headers: {
         'Authorization':
             'Bearer ${widget.token}',
@@ -129,25 +124,25 @@ final String baseUrl = kIsWeb
     Uri uri;
  if (isAdmin) {
       uri = Uri.parse(
-        '$baseUrl/financial-operations/$selectedDriverId/details'
+        '${ApiConstants.baseUrl}/financial-operations/$selectedDriverId/details'
         '?year=$selectedYear&month=$selectedMonth',
       );
     } else {
       uri = Uri.parse(
-        '$baseUrl/financial-operations/my/details'
+        '${ApiConstants.baseUrl}/financial-operations/my/details'
         '?year=$selectedYear&month=$selectedMonth',
       );
     }
     // if (isAdmin) {
     //   uri = Uri.parse(
-    //     '$baseUrl/financialOperations/driver'
+    //     '${ApiConstants.baseUrl}/financialOperations/driver'
     //     '/$selectedDriverId'
     //     '?year=$selectedYear'
     //     '&month=$selectedMonth',
     //   );
     // } else {
     //   uri = Uri.parse(
-    //     '$baseUrl/financialOperations/my'
+    //     '${ApiConstants.baseUrl}/financialOperations/my'
     //     '?year=$selectedYear'
     //     '&month=$selectedMonth',
     //   );
