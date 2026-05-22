@@ -85,7 +85,7 @@ class _CreateFinancialOperationScreenState
     });
 
     final response = await http.post(
-      Uri.parse('$baseUrl/FinancialOperations'),
+      Uri.parse('$baseUrl/financial-operations'),
       headers: {
         'Authorization': 'Bearer ${widget.token}',
         'Content-Type': 'application/json',
