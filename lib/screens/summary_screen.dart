@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:driver_reports_app/core/constants/api_constants.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -15,18 +16,11 @@ class SummaryScreen extends StatefulWidget {
   });
 
   @override
-  State<SummaryScreen> createState() =>
-      _SummaryScreenState();
+  State<SummaryScreen> createState() => _SummaryScreenState();
 }
 
-class _SummaryScreenState
-    extends State<SummaryScreen> {
-  final String baseUrl = kIsWeb
-      ? 'http://localhost:5288/api'
-      : 'http://10.0.2.2:5288/api';
-
-  bool get isAdmin =>
-      widget.role == 'Admin';
+class _SummaryScreenState extends State<SummaryScreen> {
+  bool get isAdmin => widget.role == 'Admin';
 
   bool isLoading = false;
 
@@ -40,11 +34,9 @@ class _SummaryScreenState
 
   int selectedYear = DateTime.now().year;
 
-  final List<int> months =
-      List.generate(12, (i) => i + 1);
+  final List<int> months = List.generate(12, (i) => i + 1);
 
-  final List<int> years =
-      List.generate(
+  final List<int> years = List.generate(
     5,
     (i) => DateTime.now().year - i,
   );
@@ -82,16 +74,14 @@ class _SummaryScreenState
 
   Future<void> loadDrivers() async {
     final response = await http.get(
-      Uri.parse('$baseUrl/users/drivers'),
+      Uri.parse('${ApiConstants.baseUrl}/users/drivers'),
       headers: {
-        'Authorization':
-            'Bearer ${widget.token}',
+        'Authorization': 'Bearer ${widget.token}',
       },
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> json =
-          jsonDecode(response.body);
+      final List<dynamic> json = jsonDecode(response.body);
 
       setState(() {
         drivers = json
@@ -101,8 +91,7 @@ class _SummaryScreenState
             .toList();
 
         if (drivers.isNotEmpty) {
-          selectedDriverId =
-              drivers.first.id;
+          selectedDriverId = drivers.first.id;
         }
       });
     }
@@ -121,12 +110,12 @@ class _SummaryScreenState
 
     if (isAdmin) {
       uri = Uri.parse(
-        '$baseUrl/summary/$selectedDriverId'
+        '${ApiConstants.baseUrl}/summary/$selectedDriverId'
         '?year=$selectedYear&month=$selectedMonth',
       );
     } else {
       uri = Uri.parse(
-        '$baseUrl/summary/my'
+        '${ApiConstants.baseUrl}/summary/my'
         '?year=$selectedYear&month=$selectedMonth',
       );
     }
@@ -134,21 +123,17 @@ class _SummaryScreenState
     final response = await http.get(
       uri,
       headers: {
-        'Authorization':
-            'Bearer ${widget.token}',
+        'Authorization': 'Bearer ${widget.token}',
       },
     );
 
     if (!mounted) return;
 
     if (response.statusCode == 200) {
-      final json =
-          jsonDecode(response.body);
+      final json = jsonDecode(response.body);
 
       setState(() {
-        summary =
-            DriverMonthlySummaryDto
-                .fromJson(json);
+        summary = DriverMonthlySummaryDto.fromJson(json);
 
         isLoading = false;
       });
@@ -157,8 +142,7 @@ class _SummaryScreenState
         isLoading = false;
       });
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Ошибка: ${response.statusCode}',
@@ -176,18 +160,14 @@ class _SummaryScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-            const Text('Итоговые отчёты'),
+        title: const Text('Итоговые отчёты'),
       ),
       body: Padding(
-        padding:
-            const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             buildFilters(),
-
             const SizedBox(height: 16),
-
             Expanded(
               child: buildBody(),
             ),
@@ -209,29 +189,23 @@ class _SummaryScreenState
         if (isAdmin)
           SizedBox(
             width: 220,
-            child:
-                DropdownButton<String>(
+            child: DropdownButton<String>(
               value: selectedDriverId,
               isExpanded: true,
-              hint:
-                  const Text('Водитель'),
-              items:
-                  drivers.map((driver) {
+              hint: const Text('Водитель'),
+              items: drivers.map((driver) {
                 return DropdownMenuItem(
                   value: driver.id,
-                  child:
-                      Text(driver.name),
+                  child: Text(driver.name),
                 );
               }).toList(),
               onChanged: (value) {
                 setState(() {
-                  selectedDriverId =
-                      value;
+                  selectedDriverId = value;
                 });
               },
             ),
           ),
-
         SizedBox(
           width: 120,
           child: DropdownButton<int>(
@@ -254,7 +228,6 @@ class _SummaryScreenState
             },
           ),
         ),
-
         SizedBox(
           width: 120,
           child: DropdownButton<int>(
@@ -263,8 +236,7 @@ class _SummaryScreenState
             items: years.map((year) {
               return DropdownMenuItem(
                 value: year,
-                child:
-                    Text(year.toString()),
+                child: Text(year.toString()),
               );
             }).toList(),
             onChanged: (value) {
@@ -276,11 +248,9 @@ class _SummaryScreenState
             },
           ),
         ),
-
         ElevatedButton(
           onPressed: loadSummary,
-          child:
-              const Text('Показать'),
+          child: const Text('Показать'),
         ),
       ],
     );
@@ -293,8 +263,7 @@ class _SummaryScreenState
   Widget buildBody() {
     if (isLoading) {
       return const Center(
-        child:
-            CircularProgressIndicator(),
+        child: CircularProgressIndicator(),
       );
     }
 
@@ -316,10 +285,10 @@ class _SummaryScreenState
           summary!.nonCashWithVat,
         ),
 
-        buildCard(
-          'Безнал без НДС',
-          summary!.nonCashWithoutVat,
-        ),
+        // buildCard(
+        //   'Безнал без НДС',
+        //   summary!.nonCashWithoutVat,
+        // ),
 
         buildCard(
           'Авансы',
@@ -350,50 +319,41 @@ class _SummaryScreenState
           'Зарплата',
           summary!.salary,
         ),
+         buildCard(
+          'У водителя',
+          summary!.alreadyPaidToDriver,),
+        //    buildCard(
+        //   'У Виктора',
+        //   summary!.,),
 
         Card(
           child: Padding(
-            padding:
-                const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'Баланс',
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight:
-                        FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
                 Text(
-                  summary!
-                              .remainingDebt >
-                          0
+                  summary!.balance > 0
                       ? 'Виктор должен водителю'
                       : 'Водитель должен Виктору',
-                  style:
-                      const TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
                 Text(
-                  summary!
-                      .remainingDebt
-                      .abs()
-                      .toStringAsFixed(2),
-                  style:
-                      const TextStyle(
+                  summary!.balance.abs().toStringAsFixed(2),
+                  style: const TextStyle(
                     fontSize: 24,
-                    fontWeight:
-                        FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
@@ -413,17 +373,13 @@ class _SummaryScreenState
     double value,
   ) {
     return Card(
-      margin:
-          const EdgeInsets.only(
+      margin: const EdgeInsets.only(
         bottom: 12,
       ),
       child: Padding(
-        padding:
-            const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Row(
-          mainAxisAlignment:
-              MainAxisAlignment
-                  .spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               title,
@@ -435,8 +391,7 @@ class _SummaryScreenState
               value.toStringAsFixed(2),
               style: const TextStyle(
                 fontSize: 18,
-                fontWeight:
-                    FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
@@ -452,6 +407,7 @@ class _SummaryScreenState
 
 class DriverMonthlySummaryDto {
   final double cashEarned;
+  final double alreadyPaidToDriver;
 
   final double nonCashWithVat;
 
@@ -469,7 +425,7 @@ class DriverMonthlySummaryDto {
 
   final double salary;
 
-  final double remainingDebt;
+  final double balance;
 
   DriverMonthlySummaryDto({
     required this.cashEarned,
@@ -481,52 +437,43 @@ class DriverMonthlySummaryDto {
     required this.settlementsTotal,
     required this.totalEarned,
     required this.salary,
-    required this.remainingDebt,
+    required this.balance,
+    required this.alreadyPaidToDriver,
   });
 
-  factory DriverMonthlySummaryDto
-      .fromJson(
+  factory DriverMonthlySummaryDto.fromJson(
     Map<String, dynamic> json,
   ) {
     double parse(dynamic value) {
-      return (value as num?)
-              ?.toDouble() ??
-          0;
+      return (value as num?)?.toDouble() ?? 0;
     }
 
     return DriverMonthlySummaryDto(
-      cashEarned:
-          parse(json['cashEarned']),
+      cashEarned: parse(json['cashEarned']),
 
-      nonCashWithVat:
-          parse(
-              json['nonCashWithVat']),
+      alreadyPaidToDriver: parse(json['alreadyPaidToDriver']),
+
+      nonCashWithVat: parse(json['nonCashWithVat']),
 
       nonCashWithoutVat: parse(
         json['nonCashWithoutVat'],
       ),
 
-      advanceTotal:
-          parse(json['advanceTotal']),
+      advanceTotal: parse(json['advanceTotal']),
 
-      fuelTotal:
-          parse(json['fuelTotal']),
+      fuelTotal: parse(json['fuelTotal']),
 
-      baseWorkTotal:
-          parse(json['baseWorkTotal']),
+      baseWorkTotal: parse(json['baseWorkTotal']),
 
       settlementsTotal: parse(
         json['settlementsTotal'],
       ),
 
-      totalEarned:
-          parse(json['totalEarned']),
+      totalEarned: parse(json['totalEarned']),
 
-      salary:
-          parse(json['salary']),
+      salary: parse(json['salary']),
 
-      remainingDebt:
-          parse(json['remainingDebt']),
+      balance: parse(json['balance']),
     );
   }
 }
