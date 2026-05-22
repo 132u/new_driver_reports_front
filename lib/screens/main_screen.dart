@@ -16,12 +16,10 @@ class MainScreen extends StatefulWidget {
   });
 
   @override
-  State<MainScreen> createState() =>
-      _MainScreenState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState
-    extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen> {
   int selectedIndex = 0;
 
   // =====================================================
@@ -34,8 +32,7 @@ class _MainScreenState
       builder: (context) {
         return SafeArea(
           child: Column(
-            mainAxisSize:
-                MainAxisSize.min,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // ================= REPORT =================
 
@@ -76,56 +73,53 @@ class _MainScreenState
 
               // ================= ADMIN ONLY =================
 
-              if (widget.role == 'Admin')
-                ListTile(
-                  leading: const Icon(
-                    Icons.payments,
-                  ),
-                  title: const Text(
-                    'Аванс',
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-
-                    openFinancialOperation(
-                      'Advance',
-                    );
-                  },
+              ListTile(
+                leading: const Icon(
+                  Icons.payments,
                 ),
-
-              if (widget.role == 'Admin')
-                ListTile(
-                  leading: const Icon(
-                    Icons.warehouse,
-                  ),
-                  title: const Text(
-                    'Работа на базе',
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-
-                    openFinancialOperation(
-                      'BaseWorkPayment',
-                    );
-                  },
+                title: const Text(
+                  'Аванс',
                 ),
+                onTap: () {
+                  Navigator.pop(context);
 
-              if (widget.role == 'Admin')
-                ListTile(
-                  leading: const Icon(
-                    Icons.local_gas_station,
-                  ),
-                  title: const Text(
-                    'Топливо',
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
+                  openFinancialOperation(
+                    'Advance',
+                  );
+                },
+              ),
 
-                    openFinancialOperation(
-                      'FuelExpense',
-                    );
-                  },
+              ListTile(
+                leading: const Icon(
+                  Icons.warehouse,
                 ),
+                title: const Text(
+                  'Работа на базе',
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+
+                  openFinancialOperation(
+                    'BaseWorkPayment',
+                  );
+                },
+              ),
+
+              ListTile(
+                leading: const Icon(
+                  Icons.local_gas_station,
+                ),
+                title: const Text(
+                  'Топливо',
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+
+                  openFinancialOperation(
+                    'FuelExpense',
+                  );
+                },
+              ),
             ],
           ),
         );
@@ -143,8 +137,7 @@ class _MainScreenState
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            CreateFinancialOperationScreen(
+        builder: (_) => CreateFinancialOperationScreen(
           token: widget.token,
           role: widget.role,
           type: type,
@@ -164,12 +157,10 @@ class _MainScreenState
         token: widget.token,
         role: widget.role,
       ),
-
       FinancialOperationsScreen(
         token: widget.token,
         role: widget.role,
       ),
-
       SummaryScreen(
         token: widget.token,
         role: widget.role,
@@ -177,28 +168,38 @@ class _MainScreenState
     ];
 
     return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.logout),
+          onPressed: () {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/login',
+              (route) => false,
+            );
+          },
+        ),
+      ),
       body: pages[selectedIndex],
 
       // ================= FAB =================
 
-      floatingActionButton:
-          FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
         onPressed: openCreateMenu,
         child: const Icon(Icons.add),
       ),
 
       // ================= BOTTOM NAV =================
 
-      bottomNavigationBar:
-          BottomNavigationBar(
+      bottomNavigationBar: BottomNavigationBar(
         currentIndex: selectedIndex,
-
         onTap: (index) {
           setState(() {
             selectedIndex = index;
           });
         },
-
         items: const [
           BottomNavigationBarItem(
             icon: Icon(
@@ -206,14 +207,12 @@ class _MainScreenState
             ),
             label: 'Отчеты',
           ),
-
           BottomNavigationBarItem(
             icon: Icon(
               Icons.payments,
             ),
             label: 'Операции',
           ),
-
           BottomNavigationBarItem(
             icon: Icon(
               Icons.table_chart,
