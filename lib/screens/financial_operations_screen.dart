@@ -224,68 +224,22 @@ print("PRINT TEST "+response.body);
   // UI
   // =====================================================
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Финансовые операции',
+@override
+Widget build(BuildContext context) {
+  return Padding(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      children: [
+        buildFilters(),
+        const SizedBox(height: 16),
+
+        Expanded(
+          child: buildList(),
         ),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.add),
-            onSelected: openCreate,
-            itemBuilder: (context) {
-              return const [
-                const PopupMenuItem(
-                  value: 'report',
-                  child: Text('Создать отчет'),
-                ),
-                PopupMenuItem(
-                  value: 'Advance',
-                  child: Text('Аванс'),
-                ),
-                PopupMenuItem(
-                  value: 'Settlement',
-                  child: Text(
-                    'Сдача денег',
-                  ),
-                ),
-                PopupMenuItem(
-                  value:
-                      'BaseWorkPayment',
-                  child: Text(
-                    'Работа на базе',
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'FuelExpense',
-                  child: Text('Топливо'),
-                ),
-              ];
-            },
-          ),
-        ],
-      ),
-
-      body: Padding(
-        padding:
-            const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            buildFilters(),
-
-            const SizedBox(height: 16),
-
-            Expanded(
-              child: buildList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
+      ],
+    ),
+  );
+}
   // =====================================================
   // FILTERS
   // =====================================================

@@ -222,71 +222,22 @@ final String baseUrl = kIsWeb
   // UI
   // =====================================================
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.logout),
-          onPressed: logout,
-        ),
-        title: Text(
-          isAdmin ? 'Панель администратора' : 'Отчеты водителя',
-        ),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.add),
-            onSelected: onMenuSelected,
-            itemBuilder: (context) {
-              final items = <PopupMenuEntry<String>>[
-                const PopupMenuItem(
-                  value: 'report',
-                  child: Text('Создать отчет'),
-                ),
-                const PopupMenuItem(
-                  value: 'settlement',
-                  child: Text('Сдача денег'),
-                ),
-                const PopupMenuItem(
-                  value: 'baseWork',
-                  child: Text('Работа на базе'),
-                ),
-              ];
+@override
+Widget build(BuildContext context) {
+  return Padding(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      children: [
+        buildFilters(),
+        const SizedBox(height: 16),
 
-              // Только admin
-              if (isAdmin) {
-                items.addAll([
-                  const PopupMenuItem(
-                    value: 'advance',
-                    child: Text('Аванс'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'fuel',
-                    child: Text('Топливо'),
-                  ),
-                ]);
-              }
-
-              return items;
-            },
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            buildFilters(),
-            const SizedBox(height: 16),
-            Expanded(
-              child: buildTable(),
-            ),
-          ],
+        Expanded(
+          child: buildTable(),
         ),
-      ),
-    );
-  }
-
+      ],
+    ),
+  );
+}
   // =====================================================
   // FILTERS
   // =====================================================
