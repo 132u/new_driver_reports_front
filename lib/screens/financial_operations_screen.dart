@@ -160,7 +160,7 @@ final String baseUrl = kIsWeb
             'Bearer ${widget.token}',
       },
     );
-
+print("PRINT TEST "+response.body);
     if (!mounted) return;
 
     if (response.statusCode == 200) {
@@ -237,6 +237,10 @@ final String baseUrl = kIsWeb
             onSelected: openCreate,
             itemBuilder: (context) {
               return const [
+                const PopupMenuItem(
+                  value: 'report',
+                  child: Text('Создать отчет'),
+                ),
                 PopupMenuItem(
                   value: 'Advance',
                   child: Text('Аванс'),
