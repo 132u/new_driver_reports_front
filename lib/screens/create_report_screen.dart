@@ -175,9 +175,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                   border: OutlineInputBorder(),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 0, child: Text("Cash")),
-                  DropdownMenuItem(value: 1, child: Text("Cashless VAT")),
-                  DropdownMenuItem(value: 2, child: Text("Cashless no VAT")),
+                  DropdownMenuItem(value: 0, child: Text("Наличные")),
+                  DropdownMenuItem(value: 1, child: Text("Безнал с НДС")),
+                  DropdownMenuItem(value: 2, child: Text("Безнал без НДС")),
                 ],
                 onChanged: (value) {
                   setState(() {
