@@ -1,3 +1,6 @@
+import 'package:driver_reports_app/core/api/token_storage.dart';
+import 'package:driver_reports_app/screens/create_report_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'financial_operations_screen.dart';
@@ -21,7 +24,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int selectedIndex = 0;
-
+  
   // =====================================================
   // CREATE MENU
   // =====================================================
@@ -46,9 +49,14 @@ class _MainScreenState extends State<MainScreen> {
                 onTap: () {
                   Navigator.pop(context);
 
-                  Navigator.pushNamed(
+                  Navigator.push(
                     context,
-                    '/createReport',
+                    MaterialPageRoute(
+                      builder: (_) => CreateReportScreen(
+                        token: widget.token,
+                        role: widget.role,
+                      ),
+                    ),
                   );
                 },
               ),
@@ -173,7 +181,13 @@ class _MainScreenState extends State<MainScreen> {
         backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.logout),
-          onPressed: () {
+          onPressed: () async {
+            final tokenStorage = TokenStorage();
+
+            await tokenStorage.clearToken();
+
+            if (!mounted) return;
+
             Navigator.pushNamedAndRemoveUntil(
               context,
               '/login',

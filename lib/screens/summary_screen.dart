@@ -25,7 +25,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
   bool isLoading = false;
 
   DriverMonthlySummaryDto? summary;
-
+  double companyCashlessVatTotal = 0;
   // =====================================================
   // FILTERS
   // =====================================================
@@ -66,8 +66,33 @@ class _SummaryScreenState extends State<SummaryScreen> {
     }
 
     await loadSummary();
+
+    if (isAdmin) {
+      await loadCompanyCashlessVat();
+    }
   }
 
+  Future<void> loadCompanyCashlessVat() async {
+    if (!isAdmin) return;
+
+    final response = await http.get(
+      Uri.parse(
+        '${ApiConstants.baseUrl}/summary/cashless-vat'
+        '?year=$selectedYear&month=$selectedMonth',
+      ),
+      headers: {
+        'Authorization': 'Bearer ${widget.token}',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+
+      setState(() {
+        companyCashlessVatTotal = (json['total'] as num?)?.toDouble() ?? 0;
+      });
+    }
+  }
   // =====================================================
   // LOAD DRIVERS
   // =====================================================
@@ -249,7 +274,13 @@ class _SummaryScreenState extends State<SummaryScreen> {
           ),
         ),
         ElevatedButton(
-          onPressed: loadSummary,
+          onPressed: () async {
+            await loadSummary();
+
+            if (isAdmin) {
+              await loadCompanyCashlessVat();
+            }
+          },
           child: const Text('Показать'),
         ),
       ],
@@ -275,6 +306,33 @@ class _SummaryScreenState extends State<SummaryScreen> {
 
     return ListView(
       children: [
+        if (isAdmin)
+          Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Безнал с НДС (все водители)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    companyCashlessVatTotal.toStringAsFixed(2),
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         buildCard(
           'Наличные',
           summary!.cashEarned,
@@ -319,9 +377,10 @@ class _SummaryScreenState extends State<SummaryScreen> {
           'Зарплата',
           summary!.salary,
         ),
-         buildCard(
+        buildCard(
           'У водителя',
-          summary!.alreadyPaidToDriver,),
+          summary!.alreadyPaidToDriver,
+        ),
         //    buildCard(
         //   'У Виктора',
         //   summary!.,),
@@ -450,29 +509,19 @@ class DriverMonthlySummaryDto {
 
     return DriverMonthlySummaryDto(
       cashEarned: parse(json['cashEarned']),
-
       alreadyPaidToDriver: parse(json['alreadyPaidToDriver']),
-
       nonCashWithVat: parse(json['nonCashWithVat']),
-
       nonCashWithoutVat: parse(
         json['nonCashWithoutVat'],
       ),
-
       advanceTotal: parse(json['advanceTotal']),
-
       fuelTotal: parse(json['fuelTotal']),
-
       baseWorkTotal: parse(json['baseWorkTotal']),
-
       settlementsTotal: parse(
         json['settlementsTotal'],
       ),
-
       totalEarned: parse(json['totalEarned']),
-
       salary: parse(json['salary']),
-
       balance: parse(json['balance']),
     );
   }

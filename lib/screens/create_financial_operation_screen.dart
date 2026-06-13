@@ -25,7 +25,7 @@ class _CreateFinancialOperationScreenState
     extends State<CreateFinancialOperationScreen> {
 
   final amountController = TextEditingController();
-
+  
   final commentController = TextEditingController();
 
   DateTime selectedDate = DateTime.now();

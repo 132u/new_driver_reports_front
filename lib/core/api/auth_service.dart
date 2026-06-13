@@ -1,15 +1,14 @@
 import 'dart:convert';
+import 'package:driver_reports_app/core/constants/api_constants.dart';
 import 'package:http/http.dart' as http;
 import '../models/login_result.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
 //  final String baseUrl = "http://10.0.2.2:5288";
   // ⚠️ emulator = 10.0.2.2
- final String baseUrl = kIsWeb
-    ? 'http://localhost:5288/api'
-    : 'http://10.0.2.2:5288/api';
+ final String baseUrl = ApiConstants.baseUrl;
   Future<LoginResult?> login(
     String email,
     String password,
@@ -34,11 +33,15 @@ class AuthService {
 
       final token = data["jwtToken"];
 
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('jwtToken', token);
+      
       final decodedToken = JwtDecoder.decode(token);
 
       final role = decodedToken[
           'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
 
+await prefs.setString('role', role);
       return LoginResult(
         token: token,
         role: role,

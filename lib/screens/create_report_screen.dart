@@ -1,11 +1,21 @@
+import 'dart:convert';
+
+import 'package:driver_reports_app/core/constants/api_constants.dart';
+import 'package:driver_reports_app/screens/create_financial_operation_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import '../core/api/report_service.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
 class CreateReportScreen extends StatefulWidget {
-  const CreateReportScreen({super.key});
+  final String token;
+  final String role;
+  const CreateReportScreen({
+    super.key,
+    required this.token,
+    required this.role,});
 
   @override
   State<CreateReportScreen> createState() => _CreateReportScreenState();
@@ -15,6 +25,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   final _formKey = GlobalKey<FormState>();
   File? selectedImage;
   List<File> selectedImages = [];
+  List<UserDto> drivers = [];
+  String? selectedDriverId;
+   bool get isAdmin => widget.role == 'Admin';
   Future<void> pickImages() async {
     final picker = ImagePicker();
 
@@ -28,7 +41,39 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       print("SELECTED: ${selectedImages.length} images");
     }
   }
+@override
+  void initState() {
+    super.initState();
 
+    if (isAdmin) {
+      loadDrivers();
+    }
+  }
+
+  Future<void> loadDrivers() async {
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/users/all'),
+      headers: {
+        'Authorization': 'Bearer ${widget.token}',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> json = jsonDecode(response.body);
+      final result = json
+          .map((e) => UserDto.fromJson(e))
+          .where((x) => x.role == "1")
+          .toList();
+      setState(() {
+        drivers = result;
+
+        if (drivers.isNotEmpty) {
+          selectedDriverId = drivers.first.id;
+        }
+      });
+    }
+  }
+  
   final priceController = TextEditingController();
   final descriptionController = TextEditingController();
   final clientController = TextEditingController();
@@ -48,6 +93,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       imagePaths = await reportService.uploadImages(selectedImages);
     }
     final data = {
+      "driverId": isAdmin ? selectedDriverId : null,
       "reportDate": selectedDate.toIso8601String(),
       "price": int.parse(priceController.text),
       "description": descriptionController.text,
@@ -81,6 +127,27 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
           key: _formKey,
           child: Column(
             children: [
+                    if (isAdmin)
+              DropdownButton<String>(
+                isExpanded: true,
+                value: selectedDriverId,
+                items: drivers.map((d) {
+                  return DropdownMenuItem<String>(
+                    value: d.id,
+                    child: Text(d.userName),
+                  );
+                }).toList(),
+                onChanged: drivers.isEmpty
+                    ? null
+                    : (value) {
+                        setState(() {
+                          selectedDriverId = value;
+                        });
+                      },
+              ),
+
+            if (isAdmin) const SizedBox(height: 16),
+
               // 📅 DATE
               ListTile(
                 contentPadding: EdgeInsets.zero,
