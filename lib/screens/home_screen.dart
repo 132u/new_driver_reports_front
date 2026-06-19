@@ -51,6 +51,13 @@ class _HomeScreenState extends State<HomeScreen> {
           'FuelExpense',
         );
         break;
+
+      case 'invoice':
+        Navigator.pushNamed(
+          context,
+          '/create-invoice',
+        );
+        break;
     }
   }
 
@@ -139,63 +146,60 @@ class _HomeScreenState extends State<HomeScreen> {
   // LOAD SUMMARY
   // =====================================================
 
- Future<void> loadSummary() async {
-  setState(() {
-    isLoading = true;
-  });
-
-  Uri uri;
-
-  if (isAdmin) {
-    uri = Uri.parse(
-      '${ApiConstants.baseUrl}/reports/driver/$selectedDriverId'
-      '?year=$selectedYear&month=$selectedMonth',
-    );
-  } else {
-    uri = Uri.parse(
-      '${ApiConstants.baseUrl}/reports/my'
-      '?year=$selectedYear&month=$selectedMonth',
-    );
-  }
-
-  final response = await http.get(
-    uri,
-    headers: {
-      'Authorization':
-          'Bearer ${widget.token}',
-    },
-  );
-
-  if (!mounted) return;
-
-  if (response.statusCode == 200) {
-    final List<dynamic> json =
-        jsonDecode(response.body);
-
+  Future<void> loadSummary() async {
     setState(() {
-      reports = json
-          .map(
-            (e) => ReportDto.fromJson(e),
-          )
-          .toList();
-
-      isLoading = false;
-    });
-  } else {
-    setState(() {
-      isLoading = false;
+      isLoading = true;
     });
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        content: Text(
-          'Ошибка: ${response.statusCode}',
+    Uri uri;
+
+    if (isAdmin) {
+      uri = Uri.parse(
+        '${ApiConstants.baseUrl}/reports/driver/$selectedDriverId'
+        '?year=$selectedYear&month=$selectedMonth',
+      );
+    } else {
+      uri = Uri.parse(
+        '${ApiConstants.baseUrl}/reports/my'
+        '?year=$selectedYear&month=$selectedMonth',
+      );
+    }
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer ${widget.token}',
+      },
+    );
+
+    if (!mounted) return;
+
+    if (response.statusCode == 200) {
+      final List<dynamic> json = jsonDecode(response.body);
+
+      setState(() {
+        reports = json
+            .map(
+              (e) => ReportDto.fromJson(e),
+            )
+            .toList();
+
+        isLoading = false;
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Ошибка: ${response.statusCode}',
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
-}
   // =====================================================
   // ACTIONS
   // =====================================================
@@ -218,22 +222,21 @@ class _HomeScreenState extends State<HomeScreen> {
   // UI
   // =====================================================
 
-@override
-Widget build(BuildContext context) {
-  return Padding(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      children: [
-        buildFilters(),
-        const SizedBox(height: 16),
-
-        Expanded(
-          child: buildTable(),
-        ),
-      ],
-    ),
-  );
-}
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          buildFilters(),
+          const SizedBox(height: 16),
+          Expanded(
+            child: buildTable(),
+          ),
+        ],
+      ),
+    );
+  }
   // =====================================================
   // FILTERS
   // =====================================================
@@ -334,119 +337,100 @@ Widget build(BuildContext context) {
   // =====================================================
   // TABLE
   // =====================================================
-Widget buildTable() {
-  if (isLoading) {
-    return const Center(
-      child: CircularProgressIndicator(),
-    );
-  }
+  Widget buildTable() {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
 
-  if (reports.isEmpty) {
-    return const Center(
-      child: Text('Нет отчетов'),
-    );
-  }
+    if (reports.isEmpty) {
+      return const Center(
+        child: Text('Нет отчетов'),
+      );
+    }
 
-  return ListView.builder(
-    itemCount: reports.length,
-    itemBuilder: (context, index) {
-      final item = reports[index];
+    return ListView.builder(
+      itemCount: reports.length,
+      itemBuilder: (context, index) {
+        final item = reports[index];
 
-      return InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) =>
-                  ReportDetailsScreen(
-                reportId: item.id,
-                token: widget.token,
+        return InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ReportDetailsScreen(
+                  reportId: item.id,
+                  token: widget.token,
+                ),
+              ),
+            );
+          },
+          child: Card(
+            margin: const EdgeInsets.only(
+              bottom: 12,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    formatDate(
+                      item.reportDate,
+                    ),
+                    style: const TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    item.clientName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: buildInfoBlock(
+                          'Наличные',
+                          item.paymentType == 0 ? item.price : 0,
+                        ),
+                      ),
+                      Expanded(
+                        child: buildInfoBlock(
+                          'Безнал НДС',
+                          item.paymentType == 1 ? item.price : 0,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.account_circle,
+                      ),
+                      const SizedBox(
+                        width: 8,
+                      ),
+                      Text(
+                        item.moneyHolder == 0 ? 'У водителя' : 'У фирмы',
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          );
-        },
-        child: Card(
-          margin: const EdgeInsets.only(
-            bottom: 12,
           ),
-          child: Padding(
-            padding:
-                const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  formatDate(
-                    item.reportDate,
-                  ),
-                  style: const TextStyle(
-                    color: Colors.grey,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  item.clientName,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight:
-                        FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: buildInfoBlock(
-                        'Наличные',
-                        item.paymentType == 0
-                            ? item.price
-                            : 0,
-                      ),
-                    ),
-
-                    Expanded(
-                      child: buildInfoBlock(
-                        'Безнал НДС',
-                        item.paymentType == 1
-                            ? item.price
-                            : 0,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.account_circle,
-                    ),
-
-                    const SizedBox(
-                      width: 8,
-                    ),
-
-                    Text(
-                      item.moneyHolder == 0
-                          ? 'У водителя'
-                          : 'У фирмы',
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
 // =====================================================
 // INFO BLOCK
 // =====================================================
@@ -520,21 +504,11 @@ class ReportDto {
   ) {
     return ReportDto(
       id: json['id'],
-
       reportDate: json['reportDate'],
-
-      clientName:
-          json['clientName'] ?? '',
-
-      price:
-          (json['price'] as num)
-              .toDouble(),
-
-      paymentType:
-          json['paymentType'] ?? 0,
-
-      moneyHolder:
-          json['moneyHolder'] ?? 0,
+      clientName: json['clientName'] ?? '',
+      price: (json['price'] as num).toDouble(),
+      paymentType: json['paymentType'] ?? 0,
+      moneyHolder: json['moneyHolder'] ?? 0,
     );
   }
 }

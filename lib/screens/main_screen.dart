@@ -1,6 +1,7 @@
 import 'package:driver_reports_app/core/api/token_storage.dart';
+import 'package:driver_reports_app/screens/create_invoice_screen.dart';
 import 'package:driver_reports_app/screens/create_report_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:driver_reports_app/screens/invoices_screen.dart';
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'financial_operations_screen.dart';
@@ -24,7 +25,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int selectedIndex = 0;
-  
+  bool get isAdmin => widget.role == 'Admin';
   // =====================================================
   // CREATE MENU
   // =====================================================
@@ -44,7 +45,7 @@ class _MainScreenState extends State<MainScreen> {
                   Icons.description,
                 ),
                 title: const Text(
-                  'Создать отчет',
+                  'Отчет',
                 ),
                 onTap: () {
                   Navigator.pop(context);
@@ -80,22 +81,22 @@ class _MainScreenState extends State<MainScreen> {
               ),
 
               // ================= ADMIN ONLY =================
+              if (isAdmin)
+                ListTile(
+                  leading: const Icon(
+                    Icons.payments,
+                  ),
+                  title: const Text(
+                    'Аванс',
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
 
-              ListTile(
-                leading: const Icon(
-                  Icons.payments,
+                    openFinancialOperation(
+                      'Advance',
+                    );
+                  },
                 ),
-                title: const Text(
-                  'Аванс',
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-
-                  openFinancialOperation(
-                    'Advance',
-                  );
-                },
-              ),
 
               ListTile(
                 leading: const Icon(
@@ -125,6 +126,28 @@ class _MainScreenState extends State<MainScreen> {
 
                   openFinancialOperation(
                     'FuelExpense',
+                  );
+                },
+              ),
+
+              ListTile(
+                leading: const Icon(
+                  Icons.description,
+                ),
+                title: const Text(
+                  'Счет',
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CreateInvoiceScreen(
+                        token: widget.token,
+                        role: widget.role,
+                      ),
+                    ),
                   );
                 },
               ),
@@ -160,6 +183,9 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('Role = ${widget.role}');
+print('IsAdmin = $isAdmin');
+
     final pages = [
       HomeScreen(
         token: widget.token,
@@ -173,8 +199,14 @@ class _MainScreenState extends State<MainScreen> {
         token: widget.token,
         role: widget.role,
       ),
+      if (isAdmin)
+        InvoicesScreen(
+          token: widget.token,
+          role: widget.role,
+        ),
     ];
-
+print('pages count = ${pages.length}');
+print('selectedIndex = $selectedIndex');
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -208,13 +240,14 @@ class _MainScreenState extends State<MainScreen> {
       // ================= BOTTOM NAV =================
 
       bottomNavigationBar: BottomNavigationBar(
+        type:BottomNavigationBarType.fixed,
         currentIndex: selectedIndex,
         onTap: (index) {
           setState(() {
             selectedIndex = index;
           });
         },
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(
               Icons.description,
@@ -225,7 +258,7 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(
               Icons.payments,
             ),
-            label: 'Операции',
+            label: 'Финансы',
           ),
           BottomNavigationBarItem(
             icon: Icon(
@@ -233,7 +266,15 @@ class _MainScreenState extends State<MainScreen> {
             ),
             label: 'Итоги',
           ),
+          if (isAdmin)
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.table_chart,
+              ),
+              label: 'Счета',
+            ),
         ],
+        
       ),
     );
   }
