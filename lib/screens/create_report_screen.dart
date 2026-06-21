@@ -120,7 +120,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       "clientName": clientController.text,
       "paymentType": paymentType,
       "moneyHolder": paymentType == 0 ? moneyHolder : 1,
-      "imagePath": imagePaths
+      "imagePaths": imagePaths
     };
     try {
       print("selectedDriverId = $selectedDriverId");

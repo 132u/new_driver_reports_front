@@ -220,7 +220,6 @@
               ),
 
             // ================= PHOTOS =================
-
             if (report!.photos.isNotEmpty)
               Column(
                 crossAxisAlignment:
@@ -252,7 +251,8 @@
                           (context, index) {
                         final photo =
                             report!.photos[index];
-
+                        print("photo print = $photo");
+                        
                         return Padding(
                           padding:
                               const EdgeInsets.only(
@@ -264,9 +264,9 @@
                                 BorderRadius.circular(
                               12,
                             ),
-
+                            
                             child: Image.network(
-                              photo,
+                              '${ApiConstants.serverUrl}$photo',
                               width: 220,
                               fit: BoxFit.cover,
                             ),
