@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:driver_reports_app/core/constants/api_constants.dart';
 import 'package:driver_reports_app/screens/create_financial_operation_screen.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +15,8 @@ class CreateReportScreen extends StatefulWidget {
   const CreateReportScreen({
     super.key,
     required this.token,
-    required this.role,});
+    required this.role,
+  });
 
   @override
   State<CreateReportScreen> createState() => _CreateReportScreenState();
@@ -27,7 +28,8 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   List<File> selectedImages = [];
   List<UserDto> drivers = [];
   String? selectedDriverId;
-   bool get isAdmin => widget.role == 'Admin';
+  //String? currentUserId;
+  bool get isAdmin => widget.role == 'Admin';
   Future<void> pickImages() async {
     final picker = ImagePicker();
 
@@ -41,9 +43,14 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       print("SELECTED: ${selectedImages.length} images");
     }
   }
-@override
+
+  @override
   void initState() {
     super.initState();
+    // final decodedToken = JwtDecoder.decode(widget.token);
+
+    // currentUserId = decodedToken[
+    //     'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
 
     if (isAdmin) {
       loadDrivers();
@@ -73,7 +80,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       });
     }
   }
-  
+
   final priceController = TextEditingController();
   final descriptionController = TextEditingController();
   final clientController = TextEditingController();
@@ -89,6 +96,14 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     if (!_formKey.currentState!.validate()) return;
     List<String> imagePaths = [];
 
+    if (isAdmin && selectedDriverId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Выберите водителя"),
+        ),
+      );
+      return;
+    }
     if (selectedImages.isNotEmpty) {
       imagePaths = await reportService.uploadImages(selectedImages);
     }
@@ -103,6 +118,8 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       "imagePath": imagePaths
     };
     try {
+      print("selectedDriverId = $selectedDriverId");
+      print(jsonEncode(data));
       await reportService.createReport(data);
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -127,26 +144,26 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
           key: _formKey,
           child: Column(
             children: [
-                    if (isAdmin)
-              DropdownButton<String>(
-                isExpanded: true,
-                value: selectedDriverId,
-                items: drivers.map((d) {
-                  return DropdownMenuItem<String>(
-                    value: d.id,
-                    child: Text(d.userName),
-                  );
-                }).toList(),
-                onChanged: drivers.isEmpty
-                    ? null
-                    : (value) {
-                        setState(() {
-                          selectedDriverId = value;
-                        });
-                      },
-              ),
+              if (isAdmin)
+                DropdownButton<String>(
+                  isExpanded: true,
+                  value: selectedDriverId,
+                  items: drivers.map((d) {
+                    return DropdownMenuItem<String>(
+                      value: d.id,
+                      child: Text(d.userName),
+                    );
+                  }).toList(),
+                  onChanged: drivers.isEmpty
+                      ? null
+                      : (value) {
+                          setState(() {
+                            selectedDriverId = value;
+                          });
+                        },
+                ),
 
-            if (isAdmin) const SizedBox(height: 16),
+              if (isAdmin) const SizedBox(height: 16),
 
               // 📅 DATE
               ListTile(
@@ -330,7 +347,8 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                 width: double.infinity,
                 height: 45,
                 child: ElevatedButton(
-                  onPressed: createReport,
+                  onPressed:
+                      isAdmin && selectedDriverId == null ? null : createReport,
                   child: const Text("Создать отчет"),
                 ),
               ),

@@ -2,6 +2,7 @@ import 'package:driver_reports_app/core/api/token_storage.dart';
 import 'package:driver_reports_app/screens/create_invoice_screen.dart';
 import 'package:driver_reports_app/screens/create_report_screen.dart';
 import 'package:driver_reports_app/screens/invoices_screen.dart';
+import 'package:driver_reports_app/screens/version_screen.dart';
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'financial_operations_screen.dart';
@@ -184,7 +185,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     print('Role = ${widget.role}');
-print('IsAdmin = $isAdmin');
+    print('IsAdmin = $isAdmin');
 
     final pages = [
       HomeScreen(
@@ -205,8 +206,8 @@ print('IsAdmin = $isAdmin');
           role: widget.role,
         ),
     ];
-print('pages count = ${pages.length}');
-print('selectedIndex = $selectedIndex');
+    print('pages count = ${pages.length}');
+    print('selectedIndex = $selectedIndex');
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -227,6 +228,20 @@ print('selectedIndex = $selectedIndex');
             );
           },
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'О приложении',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const VersionScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: pages[selectedIndex],
 
@@ -240,7 +255,7 @@ print('selectedIndex = $selectedIndex');
       // ================= BOTTOM NAV =================
 
       bottomNavigationBar: BottomNavigationBar(
-        type:BottomNavigationBarType.fixed,
+        type: BottomNavigationBarType.fixed,
         currentIndex: selectedIndex,
         onTap: (index) {
           setState(() {
@@ -274,7 +289,6 @@ print('selectedIndex = $selectedIndex');
               label: 'Счета',
             ),
         ],
-        
       ),
     );
   }
