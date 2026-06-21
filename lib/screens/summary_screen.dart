@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:driver_reports_app/core/constants/api_constants.dart';
+import 'package:driver_reports_app/screens/widgets/operations_filters.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -207,83 +208,30 @@ class _SummaryScreenState extends State<SummaryScreen> {
   // =====================================================
 
   Widget buildFilters() {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 16,
-      children: [
-        if (isAdmin)
-          SizedBox(
-            width: 220,
-            child: DropdownButton<String>(
-              value: selectedDriverId,
-              isExpanded: true,
-              hint: const Text('Водитель'),
-              items: drivers.map((driver) {
-                return DropdownMenuItem(
-                  value: driver.id,
-                  child: Text(driver.name),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedDriverId = value;
-                });
-              },
-            ),
-          ),
-        SizedBox(
-          width: 120,
-          child: DropdownButton<int>(
-            value: selectedMonth,
-            isExpanded: true,
-            items: months.map((month) {
-              return DropdownMenuItem(
-                value: month,
-                child: Text(
-                  month.toString(),
-                ),
-              );
-            }).toList(),
-            onChanged: (value) {
-              if (value == null) return;
-
-              setState(() {
-                selectedMonth = value;
-              });
-            },
-          ),
-        ),
-        SizedBox(
-          width: 120,
-          child: DropdownButton<int>(
-            value: selectedYear,
-            isExpanded: true,
-            items: years.map((year) {
-              return DropdownMenuItem(
-                value: year,
-                child: Text(year.toString()),
-              );
-            }).toList(),
-            onChanged: (value) {
-              if (value == null) return;
-
-              setState(() {
-                selectedYear = value;
-              });
-            },
-          ),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            await loadSummary();
-
-            if (isAdmin) {
-              await loadCompanyCashlessVat();
-            }
-          },
-          child: const Text('Показать'),
-        ),
-      ],
+    return OperationsFilters(
+      isAdmin: isAdmin,
+      selectedDriverId: selectedDriverId,
+      drivers: drivers,
+      selectedMonth: selectedMonth,
+      selectedYear: selectedYear,
+      months: months,
+      years: years,
+      onDriverChanged: (value) {
+        setState(() {
+          selectedDriverId = value;
+        });
+      },
+      onMonthChanged: (value) {
+        setState(() {
+          selectedMonth = value;
+        });
+      },
+      onYearChanged: (value) {
+        setState(() {
+          selectedYear = value;
+        });
+      },
+      onApply: loadSummary,
     );
   }
 
@@ -305,34 +253,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     }
 
     return ListView(
-      children: [
-        if (isAdmin)
-          Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Безнал с НДС (все водители)',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    companyCashlessVatTotal.toStringAsFixed(2),
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+      children: [        
         buildCard(
           'Наличные',
           summary!.cashEarned,

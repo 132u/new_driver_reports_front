@@ -1,3 +1,5 @@
+import 'package:driver_reports_app/screens/widgets/operations_filters.dart';
+
 import '../core/constants/api_constants.dart';
 import 'dart:convert';
 
@@ -6,8 +8,7 @@ import 'package:http/http.dart' as http;
 
 import 'create_financial_operation_screen.dart';
 
-class FinancialOperationsScreen
-    extends StatefulWidget {
+class FinancialOperationsScreen extends StatefulWidget {
   final String token;
   final String role;
 
@@ -18,15 +19,12 @@ class FinancialOperationsScreen
   });
 
   @override
-  State<FinancialOperationsScreen>
-      createState() =>
-          _FinancialOperationsScreenState();
+  State<FinancialOperationsScreen> createState() =>
+      _FinancialOperationsScreenState();
 }
 
-class _FinancialOperationsScreenState
-    extends State<FinancialOperationsScreen> {
-  bool get isAdmin =>
-      widget.role == 'Admin';
+class _FinancialOperationsScreenState extends State<FinancialOperationsScreen> {
+  bool get isAdmin => widget.role == 'Admin';
 
   // =====================================================
   // FILTERS
@@ -36,8 +34,7 @@ class _FinancialOperationsScreenState
 
   int selectedYear = DateTime.now().year;
 
-  final List<int> months =
-      List.generate(12, (i) => i + 1);
+  final List<int> months = List.generate(12, (i) => i + 1);
 
   final List<int> years = List.generate(
     5,
@@ -56,8 +53,7 @@ class _FinancialOperationsScreenState
   // DATA
   // =====================================================
 
-  List<FinancialOperationDto>
-      operations = [];
+  List<FinancialOperationDto> operations = [];
 
   bool isLoading = false;
 
@@ -88,25 +84,20 @@ class _FinancialOperationsScreenState
     final response = await http.get(
       Uri.parse('${ApiConstants.baseUrl}/users/drivers'),
       headers: {
-        'Authorization':
-            'Bearer ${widget.token}',
+        'Authorization': 'Bearer ${widget.token}',
       },
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> json =
-          jsonDecode(response.body);
+      final List<dynamic> json = jsonDecode(response.body);
 
-      final result = json
-          .map((e) => UserDto.fromJson(e))
-          .toList();
+      final result = json.map((e) => UserDto.fromJson(e)).toList();
 
       setState(() {
         drivers = result;
 
         if (drivers.isNotEmpty) {
-          selectedDriverId =
-              drivers.first.id;
+          selectedDriverId = drivers.first.id;
         }
       });
     }
@@ -122,7 +113,7 @@ class _FinancialOperationsScreenState
     });
 
     Uri uri;
- if (isAdmin) {
+    if (isAdmin) {
       uri = Uri.parse(
         '${ApiConstants.baseUrl}/financial-operations/$selectedDriverId/details'
         '?year=$selectedYear&month=$selectedMonth',
@@ -151,30 +142,25 @@ class _FinancialOperationsScreenState
     final response = await http.get(
       uri,
       headers: {
-        'Authorization':
-            'Bearer ${widget.token}',
+        'Authorization': 'Bearer ${widget.token}',
       },
     );
-print("PRINT TEST "+response.body);
+    print("PRINT TEST " + response.body);
     if (!mounted) return;
 
     if (response.statusCode == 200) {
-      final List<dynamic> json =
-          jsonDecode(response.body);
+      final List<dynamic> json = jsonDecode(response.body);
 
       setState(() {
         operations = json
             .map(
-              (e) =>
-                  FinancialOperationDto
-                      .fromJson(e),
+              (e) => FinancialOperationDto.fromJson(e),
             )
             .toList();
 
         isLoading = false;
       });
-    } else if (response.statusCode ==
-        204) {
+    } else if (response.statusCode == 204) {
       setState(() {
         operations = [];
         isLoading = false;
@@ -184,8 +170,7 @@ print("PRINT TEST "+response.body);
         isLoading = false;
       });
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Ошибка: ${response.statusCode}',
@@ -203,8 +188,7 @@ print("PRINT TEST "+response.body);
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            CreateFinancialOperationScreen(
+        builder: (_) => CreateFinancialOperationScreen(
           token: widget.token,
           role: widget.role,
           type: type,
@@ -219,122 +203,50 @@ print("PRINT TEST "+response.body);
   // UI
   // =====================================================
 
-@override
-Widget build(BuildContext context) {
-  return Padding(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      children: [
-        buildFilters(),
-        const SizedBox(height: 16),
-
-        Expanded(
-          child: buildList(),
-        ),
-      ],
-    ),
-  );
-}
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          buildFilters(),
+          const SizedBox(height: 16),
+          Expanded(
+            child: buildList(),
+          ),
+        ],
+      ),
+    );
+  }
   // =====================================================
   // FILTERS
   // =====================================================
 
   Widget buildFilters() {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 16,
-      children: [
-        // =============================================
-        // DRIVER
-        // =============================================
-
-        if (isAdmin)
-          SizedBox(
-            width: 220,
-            child:
-                DropdownButton<String>(
-              value: selectedDriverId,
-              isExpanded: true,
-              hint: const Text(
-                'Водитель',
-              ),
-              items: drivers.map((d) {
-                return DropdownMenuItem(
-                  value: d.id,
-                  child: Text(d.name),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedDriverId =
-                      value;
-                });
-              },
-            ),
-          ),
-
-        // =============================================
-        // MONTH
-        // =============================================
-
-        SizedBox(
-          width: 120,
-          child: DropdownButton<int>(
-            value: selectedMonth,
-            isExpanded: true,
-            items: months.map((m) {
-              return DropdownMenuItem(
-                value: m,
-                child:
-                    Text(m.toString()),
-              );
-            }).toList(),
-            onChanged: (value) {
-              if (value == null) return;
-
-              setState(() {
-                selectedMonth = value;
-              });
-            },
-          ),
-        ),
-
-        // =============================================
-        // YEAR
-        // =============================================
-
-        SizedBox(
-          width: 120,
-          child: DropdownButton<int>(
-            value: selectedYear,
-            isExpanded: true,
-            items: years.map((y) {
-              return DropdownMenuItem(
-                value: y,
-                child:
-                    Text(y.toString()),
-              );
-            }).toList(),
-            onChanged: (value) {
-              if (value == null) return;
-
-              setState(() {
-                selectedYear = value;
-              });
-            },
-          ),
-        ),
-
-        // =============================================
-        // BUTTON
-        // =============================================
-
-        ElevatedButton(
-          onPressed: loadOperations,
-          child:
-              const Text('Показать'),
-        ),
-      ],
+    return OperationsFilters(
+      isAdmin: isAdmin,
+      selectedDriverId: selectedDriverId,
+      drivers: drivers,
+      selectedMonth: selectedMonth,
+      selectedYear: selectedYear,
+      months: months,
+      years: years,
+      onDriverChanged: (value) {
+        setState(() {
+          selectedDriverId = value;
+        });
+      },
+      onMonthChanged: (value) {
+        setState(() {
+          selectedMonth = value;
+        });
+      },
+      onYearChanged: (value) {
+        setState(() {
+          selectedYear = value;
+        });
+      },
+      onApply: loadOperations,
     );
   }
 
@@ -345,8 +257,7 @@ Widget build(BuildContext context) {
   Widget buildList() {
     if (isLoading) {
       return const Center(
-        child:
-            CircularProgressIndicator(),
+        child: CircularProgressIndicator(),
       );
     }
 
@@ -359,63 +270,48 @@ Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: operations.length,
       itemBuilder: (context, index) {
-        final item =
-            operations[index];
+        final item = operations[index];
 
         return Card(
           margin: const EdgeInsets.only(
             bottom: 12,
           ),
           child: Padding(
-            padding:
-                const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Expanded(
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment
-                            .start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         item.typeName,
-                        style:
-                            const TextStyle(
+                        style: const TextStyle(
                           fontSize: 18,
-                          fontWeight:
-                              FontWeight
-                                  .bold,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-
                       const SizedBox(
                         height: 8,
                       ),
-
                       Text(
                         formatDate(
                           item.date,
                         ),
-                        style:
-                            const TextStyle(
-                          color:
-                              Colors.grey,
+                        style: const TextStyle(
+                          color: Colors.grey,
                         ),
                       ),
                     ],
                   ),
                 ),
-
                 Text(
-                  item.amount
-                      .toStringAsFixed(
+                  item.amount.toStringAsFixed(
                     2,
                   ),
-                  style:
-                      const TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
-                    fontWeight:
-                        FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
@@ -431,8 +327,7 @@ Widget build(BuildContext context) {
   // =====================================================
 
   String formatDate(String date) {
-    final parsed =
-        DateTime.parse(date);
+    final parsed = DateTime.parse(date);
 
     return '${parsed.day}.${parsed.month}.${parsed.year}';
   }
@@ -443,7 +338,7 @@ Widget build(BuildContext context) {
 // =====================================================
 
 class FinancialOperationDto {
- // final String id;
+  // final String id;
 
   final String date;
 
@@ -452,7 +347,6 @@ class FinancialOperationDto {
   final int type;
 
   FinancialOperationDto({
-  
     required this.date,
     required this.amount,
     required this.type,
@@ -481,12 +375,8 @@ class FinancialOperationDto {
     Map<String, dynamic> json,
   ) {
     return FinancialOperationDto(
-          date: json['date'],
-
-      amount:
-          (json['amount'] as num)
-              .toDouble(),
-
+      date: json['date'],
+      amount: (json['amount'] as num).toDouble(),
       type: json['type'],
     );
   }
