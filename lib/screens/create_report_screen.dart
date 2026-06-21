@@ -25,24 +25,29 @@ class CreateReportScreen extends StatefulWidget {
 class _CreateReportScreenState extends State<CreateReportScreen> {
   final _formKey = GlobalKey<FormState>();
   File? selectedImage;
-  List<File> selectedImages = [];
+  List<Uint8List> selectedImages = [];
   List<UserDto> drivers = [];
   String? selectedDriverId;
   //String? currentUserId;
   bool get isAdmin => widget.role == 'Admin';
+
   Future<void> pickImages() async {
-    final picker = ImagePicker();
+  final picker = ImagePicker();
 
-    final pickedFiles = await picker.pickMultiImage();
+  final pickedFiles = await picker.pickMultiImage();
 
-    if (pickedFiles.isNotEmpty) {
-      setState(() {
-        selectedImages = pickedFiles.map((e) => File(e.path)).toList();
-      });
+  if (pickedFiles.isNotEmpty) {
+    final bytesList = await Future.wait(
+      pickedFiles.map((e) => e.readAsBytes()),
+    );
 
-      print("SELECTED: ${selectedImages.length} images");
-    }
+    setState(() {
+      selectedImages = bytesList;
+    });
+
+    print("SELECTED: ${selectedImages.length} images");
   }
+}
 
   @override
   void initState() {
@@ -328,12 +333,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                                   margin: const EdgeInsets.all(8),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(10),
-                                    child: Image.file(
-                                      file,
-                                      width: 120,
-                                      height: 120,
-                                      fit: BoxFit.cover,
-                                    ),
+                                    child:Image.memory(selectedImages[index])
                                   ),
                                 );
                               },

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'api_client.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -51,41 +52,47 @@ class ReportService {
     }
   }
 
-  Future<List<String>> uploadImages(List<File> files) async {
-    print("UPLOAD START");
+  Future<List<String>> uploadImages(List<Uint8List> files) async {
+  print("UPLOAD START");
 
-    final tokenStorage = TokenStorage();
-    final token = await tokenStorage.getToken();
+  final tokenStorage = TokenStorage();
+  final token = await tokenStorage.getToken();
 
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse(_client.baseUrl + "/files/upload"),
+  var request = http.MultipartRequest(
+    'POST',
+    Uri.parse(_client.baseUrl + "/files/upload"),
+  );
+
+  request.headers['Authorization'] = 'Bearer $token';
+
+  for (int i = 0; i < files.length; i++) {
+    final fileBytes = files[i];
+
+    print("ADDING FILE #$i (${fileBytes.lengthInBytes} bytes)");
+
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'files',
+        fileBytes,
+        filename: 'image_$i.jpg',
+      ),
     );
-
-    request.headers['Authorization'] = 'Bearer $token';
-
-    for (var file in files) {
-      print("ADDING FILE: ${file.path}");
-
-      request.files.add(
-        await http.MultipartFile.fromPath('files', file.path), // 👈 важно
-      );
-    }
-
-    print("SENDING REQUEST...");
-
-    var response = await request.send();
-
-    final respStr = await response.stream.bytesToString();
-
-    print("STATUS: ${response.statusCode}");
-    print("BODY: $respStr");
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(respStr);
-      return List<String>.from(data["urls"]);
-    }
-
-    throw Exception("Upload failed");
   }
+
+  print("SENDING REQUEST...");
+
+  var response = await request.send();
+
+  final respStr = await response.stream.bytesToString();
+
+  print("STATUS: ${response.statusCode}");
+  print("BODY: $respStr");
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(respStr);
+    return List<String>.from(data["urls"]);
+  }
+
+  throw Exception("Upload failed: ${response.statusCode} $respStr");
+}
 }

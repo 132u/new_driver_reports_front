@@ -55,7 +55,8 @@
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
-
+  print(jsonEncode(json));
+  print('IMAGE PATHS: ${json['imagePaths']}');
         setState(() {
           report = ReportDetailsDto.fromJson(
             json,
