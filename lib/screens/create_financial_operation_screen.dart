@@ -106,7 +106,7 @@ class _CreateFinancialOperationScreenState
     if (!mounted) return;
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

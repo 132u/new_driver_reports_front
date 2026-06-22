@@ -168,10 +168,8 @@ class _MainScreenState extends State<MainScreen> {
   // OPEN FIN OPERATION
   // =====================================================
 
-  void openFinancialOperation(
-    String type,
-  ) {
-    Navigator.push(
+  Future<void> openFinancialOperation(String type) async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => CreateFinancialOperationScreen(
@@ -181,6 +179,12 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
     );
+
+    if (result == true) {
+      setState(() {
+        homeRefreshKey++;
+      });
+    }
   }
 
   // =====================================================
@@ -199,6 +203,7 @@ class _MainScreenState extends State<MainScreen> {
         role: widget.role,
       ),
       FinancialOperationsScreen(
+        key: ValueKey(homeRefreshKey),
         token: widget.token,
         role: widget.role,
       ),
