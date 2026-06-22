@@ -1,5 +1,6 @@
 import 'package:driver_reports_app/screens/home_screen.dart';
 import 'package:driver_reports_app/screens/main_screen.dart';
+import 'package:driver_reports_app/screens/version_screen.dart';
 import 'package:flutter/material.dart';
 import '../core/api/auth_service.dart';
 import '../core/api/token_storage.dart';
@@ -49,6 +50,24 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const VersionScreen(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
