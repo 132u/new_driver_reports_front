@@ -127,10 +127,11 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       print(jsonEncode(data));
       await reportService.createReport(data);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Отчет успешно создан")),
-      );
-
+      
+print('REPORT CREATED');
+// ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(content: Text("Отчет успешно создан")),
+//       );
       Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

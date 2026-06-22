@@ -26,6 +26,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int selectedIndex = 0;
+  int homeRefreshKey = 0;
   bool get isAdmin => widget.role == 'Admin';
   // =====================================================
   // CREATE MENU
@@ -42,16 +43,12 @@ class _MainScreenState extends State<MainScreen> {
               // ================= REPORT =================
 
               ListTile(
-                leading: const Icon(
-                  Icons.description,
-                ),
-                title: const Text(
-                  'Отчет',
-                ),
-                onTap: () {
+                leading: const Icon(Icons.description),
+                title: const Text('Отчет'),
+                onTap: () async {
                   Navigator.pop(context);
 
-                  Navigator.push(
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => CreateReportScreen(
@@ -60,6 +57,14 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                     ),
                   );
+
+                  print('CREATE REPORT RESULT = $result');
+
+                  if (result == true) {
+                    setState(() {
+                      homeRefreshKey++;
+                    });
+                  }
                 },
               ),
 
@@ -189,6 +194,7 @@ class _MainScreenState extends State<MainScreen> {
 
     final pages = [
       HomeScreen(
+        key: ValueKey(homeRefreshKey),
         token: widget.token,
         role: widget.role,
       ),

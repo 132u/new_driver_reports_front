@@ -10,7 +10,7 @@ import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   final String token;
-
+ // int homeRefreshKey = 0;
   /// Driver или Admin
   final String role;
 
@@ -25,13 +25,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  void onMenuSelected(String value) {
+  
+  void onMenuSelected(String value) async {
     switch (value) {
       case 'report':
-        Navigator.pushNamed(
-          context,
-          '/create-report',
-        );
+       print('MENU REPORT');
+        await openCreateReport();
+          print('AFTER OPEN CREATE REPORT');
         break;
 
       case 'advance':
@@ -137,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         drivers = result;
 
-        if (drivers.isNotEmpty) {
+        if (drivers.isNotEmpty && selectedDriverId == null) {
           selectedDriverId = drivers.first.id;
         }
       });
@@ -213,11 +213,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void openCreateReport() {
-    Navigator.pushNamed(
+  Future<void> openCreateReport() async {
+    print('OPEN CREATE REPORT');
+    final result = await Navigator.pushNamed(
       context,
-      '/createReport',
+      '/create-report',
     );
+    print('RESULT = $result');
+    if (result == true) {
+      await loadSummary();
+    }
   }
 
   // =====================================================
