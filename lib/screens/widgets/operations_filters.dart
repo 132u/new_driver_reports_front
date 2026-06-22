@@ -39,16 +39,14 @@ class OperationsFilters extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 16,
+Widget build(BuildContext context) {
+  return SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
       children: [
-
-        // DRIVER
         if (isAdmin)
           SizedBox(
-            width: 220,
+            width: 180,
             child: DropdownButton<String>(
               value: selectedDriverId,
               isExpanded: true,
@@ -56,24 +54,26 @@ class OperationsFilters extends StatelessWidget {
               items: drivers.map<DropdownMenuItem<String>>((d) {
                 return DropdownMenuItem(
                   value: d.id,
-                  child: Text(d.name),
+                  child: Text(
+                    d.name,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 );
               }).toList(),
               onChanged: onDriverChanged,
             ),
           ),
 
-        // MONTH
+        const SizedBox(width: 8),
+
         SizedBox(
-          width: 120,
+          width: 110,
           child: DropdownButton<int>(
             value: selectedMonth,
             isExpanded: true,
             items: List.generate(12, (index) {
-              final monthNumber = index + 1;
-
               return DropdownMenuItem(
-                value: monthNumber,
+                value: index + 1,
                 child: Text(monthNames[index]),
               );
             }),
@@ -83,9 +83,10 @@ class OperationsFilters extends StatelessWidget {
           ),
         ),
 
-        // YEAR
+        const SizedBox(width: 8),
+
         SizedBox(
-          width: 120,
+          width: 90,
           child: DropdownButton<int>(
             value: selectedYear,
             isExpanded: true,
@@ -101,12 +102,14 @@ class OperationsFilters extends StatelessWidget {
           ),
         ),
 
-        // BUTTON
+        const SizedBox(width: 8),
+
         ElevatedButton(
           onPressed: onApply,
           child: const Text('Показать'),
         ),
       ],
-    );
-  }
+    ),
+  );
+}
 }
