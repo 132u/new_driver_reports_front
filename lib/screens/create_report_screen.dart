@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:driver_reports_app/screens/home_screen.dart' show ReportDto;
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:driver_reports_app/core/constants/api_constants.dart';
 import 'package:driver_reports_app/screens/create_financial_operation_screen.dart';
@@ -12,10 +13,12 @@ import 'package:image_picker/image_picker.dart';
 class CreateReportScreen extends StatefulWidget {
   final String token;
   final String role;
+  final ReportDto? report;
   const CreateReportScreen({
     super.key,
     required this.token,
     required this.role,
+    this.report,
   });
 
   @override
@@ -23,6 +26,7 @@ class CreateReportScreen extends StatefulWidget {
 }
 
 class _CreateReportScreenState extends State<CreateReportScreen> {
+  bool get isEdit => widget.report != null;
   final _formKey = GlobalKey<FormState>();
   File? selectedImage;
   List<Uint8List> selectedImages = [];
@@ -32,33 +36,45 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   bool get isAdmin => widget.role == 'Admin';
 
   Future<void> pickImages() async {
-  final picker = ImagePicker();
+    final picker = ImagePicker();
 
-  final pickedFiles = await picker.pickMultiImage();
+    final pickedFiles = await picker.pickMultiImage();
 
-  if (pickedFiles.isNotEmpty) {
-    final bytesList = await Future.wait(
-      pickedFiles.map((e) => e.readAsBytes()),
-    );
+    if (pickedFiles.isNotEmpty) {
+      final bytesList = await Future.wait(
+        pickedFiles.map((e) => e.readAsBytes()),
+      );
 
-    setState(() {
-      selectedImages = bytesList;
-    });
+      setState(() {
+        selectedImages = bytesList;
+      });
 
-    print("SELECTED: ${selectedImages.length} images");
+      print("SELECTED: ${selectedImages.length} images");
+    }
   }
-}
 
   @override
   void initState() {
     super.initState();
-    // final decodedToken = JwtDecoder.decode(widget.token);
-
-    // currentUserId = decodedToken[
-    //     'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
 
     if (isAdmin) {
       loadDrivers();
+    }
+
+    if (widget.report != null) {
+      final report = widget.report!;
+
+      priceController.text = report.price.toString();
+
+      clientController.text = report.clientName;
+
+      descriptionController.text = report.description;
+
+      paymentType = report.paymentType;
+
+      moneyHolder = report.moneyHolder;
+
+      selectedDate = DateTime.parse(report.reportDate);
     }
   }
 
@@ -125,11 +141,17 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     try {
       print("selectedDriverId = $selectedDriverId");
       print(jsonEncode(data));
-      await reportService.createReport(data);
+      if (isEdit) {
+        await reportService.updateReport(
+          widget.report!.id,
+          data,
+        );
+      } else {
+        await reportService.createReport(data);
+      }
 
-      
-print('REPORT CREATED');
-ScaffoldMessenger.of(context).showSnackBar(
+      print('REPORT CREATED');
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Отчет успешно создан")),
       );
       Navigator.pop(context, true);
@@ -143,7 +165,11 @@ ScaffoldMessenger.of(context).showSnackBar(
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Создать отчет")),
+      appBar: AppBar(
+        title: Text(
+          isEdit ? "Редактировать отчет" : "Создать отчет",
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -333,9 +359,9 @@ ScaffoldMessenger.of(context).showSnackBar(
                                 return Container(
                                   margin: const EdgeInsets.all(8),
                                   child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child:Image.memory(selectedImages[index])
-                                  ),
+                                      borderRadius: BorderRadius.circular(10),
+                                      child:
+                                          Image.memory(selectedImages[index])),
                                 );
                               },
                             ),
@@ -350,7 +376,9 @@ ScaffoldMessenger.of(context).showSnackBar(
                 child: ElevatedButton(
                   onPressed:
                       isAdmin && selectedDriverId == null ? null : createReport,
-                  child: const Text("Создать отчет"),
+                  child: Text(
+                    isEdit ? "Сохранить" : "Создать отчет",
+                  ),
                 ),
               ),
             ],

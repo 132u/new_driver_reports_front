@@ -1,3 +1,4 @@
+import 'package:driver_reports_app/screens/create_report_screen.dart';
 import 'package:driver_reports_app/screens/widgets/operations_filters.dart';
 
 import '../core/constants/api_constants.dart';
@@ -10,7 +11,7 @@ import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   final String token;
- // int homeRefreshKey = 0;
+  // int homeRefreshKey = 0;
   /// Driver или Admin
   final String role;
 
@@ -25,13 +26,82 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  
+  Future<void> deleteReport(String reportId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Удалить отчет?'),
+        content: const Text(
+          'Отчет будет удален без возможности восстановления.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await http.delete(
+        Uri.parse(
+          '${ApiConstants.baseUrl}/reports/$reportId',
+        ),
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+        },
+      );
+
+      await loadSummary();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Отчет удален'),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Ошибка: $e'),
+        ),
+      );
+    }
+  }
+
+  Future<void> openEditReport(
+    ReportDto report,
+  ) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreateReportScreen(
+          token: widget.token,
+          role: widget.role,
+          report: report,
+        ),
+      ),
+    );
+
+    if (result == true) {
+      await loadSummary();
+    }
+  }
+
   void onMenuSelected(String value) async {
     switch (value) {
       case 'report':
-       print('MENU REPORT');
+        print('MENU REPORT');
         await openCreateReport();
-          print('AFTER OPEN CREATE REPORT');
+        print('AFTER OPEN CREATE REPORT');
         break;
 
       case 'advance':
@@ -318,13 +388,38 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    formatDate(
-                      item.reportDate,
-                    ),
-                    style: const TextStyle(
-                      color: Colors.grey,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            formatDate(item.reportDate),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (isAdmin)
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () {
+                                openEditReport(item);
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                deleteReport(item.id);
+                              },
+                            ),
+                          ],
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -431,7 +526,9 @@ class ReportDto {
   final int paymentType;
 
   final int moneyHolder;
-
+  final String description;
+  final List<String> imagePaths;
+  final String driverId;
   ReportDto({
     required this.id,
     required this.reportDate,
@@ -439,6 +536,9 @@ class ReportDto {
     required this.price,
     required this.paymentType,
     required this.moneyHolder,
+    required this.description,
+    required this.imagePaths,
+    required this.driverId,
   });
 
   factory ReportDto.fromJson(
@@ -451,6 +551,11 @@ class ReportDto {
       price: (json['price'] as num).toDouble(),
       paymentType: json['paymentType'] ?? 0,
       moneyHolder: json['moneyHolder'] ?? 0,
+      description: json['description'] ?? '',
+      imagePaths: json['imagePaths'] == null
+          ? []
+          : List<String>.from(json['imagePaths']),
+      driverId: json['driverId'] ?? '',
     );
   }
 }

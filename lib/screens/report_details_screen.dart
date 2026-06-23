@@ -5,13 +5,14 @@ import 'package:http/http.dart' as http;
 
 class ReportDetailsScreen extends StatefulWidget {
   final String reportId;
-
+  final String role;
   final String token;
 
   const ReportDetailsScreen({
     super.key,
     required this.reportId,
     required this.token,
+    required this.role,
   });
 
   @override
@@ -20,8 +21,62 @@ class ReportDetailsScreen extends StatefulWidget {
 
 class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
   ReportDetailsDto? report;
-
+  bool get isAdmin => widget.role == 'Admin';
   bool isLoading = false;
+  Future<void> deleteReport() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Удаление'),
+        content: const Text(
+          'Удалить отчет?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, false);
+            },
+            child: const Text('Нет'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context, true);
+            },
+            child: const Text('Да'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final response = await http.delete(
+      Uri.parse(
+        '${ApiConstants.baseUrl}/reports/${report!.id}',
+      ),
+      headers: {
+        'Authorization': 'Bearer ${widget.token}',
+      },
+    );
+
+    if (!mounted) return;
+
+    if (response.statusCode == 200) {
+      Navigator.pop(context, true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Ошибка удаления: ${response.statusCode}',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> openEditReport() async {
+    print(report!.id);
+  }
 
   @override
   void initState() {
@@ -87,6 +142,22 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
         title: const Text(
           'Детали отчета',
         ),
+        actions: [
+          if (isAdmin && report != null)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                openEditReport();
+              },
+            ),
+          if (isAdmin && report != null)
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () {
+                deleteReport();
+              },
+            ),
+        ],
       ),
       body: buildBody(),
     );
@@ -377,7 +448,9 @@ class ReportDetailsDto {
   final String? comment;
 
   final List<String> photos;
-
+// driverId
+// paymentType
+// price
   ReportDetailsDto({
     required this.id,
     required this.date,

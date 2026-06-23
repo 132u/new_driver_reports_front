@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:driver_reports_app/core/constants/api_constants.dart';
+
 import 'api_client.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -38,6 +40,29 @@ class ReportService {
 //     }
 //   }
 
+Future<void> updateReport(
+  String id,
+  Map<String, dynamic> data,
+) async {
+      final tokenStorage = TokenStorage();
+    final token = await tokenStorage.getToken();
+  final response = await http.put(
+    Uri.parse(
+      '${ApiConstants.baseUrl}/reports/$id',
+    ),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode(data),
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception(
+      'Ошибка редактирования отчета',
+    );
+  }
+}
   Future<void> createReport(Map<String, dynamic> data) async {
     final tokenStorage = TokenStorage();
     final token = await tokenStorage.getToken();
