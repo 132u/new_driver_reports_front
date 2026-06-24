@@ -90,14 +90,18 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
 
     if (response.statusCode == 200) {
       final List<dynamic> json = jsonDecode(response.body);
+
       final result = json
           .map((e) => UserDto.fromJson(e))
           .where((x) => x.role == "1")
           .toList();
+
       setState(() {
         drivers = result;
 
-        if (drivers.isNotEmpty) {
+        if (widget.report != null) {
+          selectedDriverId = widget.report!.driverId;
+        } else if (drivers.isNotEmpty) {
           selectedDriverId = drivers.first.id;
         }
       });
@@ -359,19 +363,47 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                           : ListView(
                               scrollDirection: Axis.horizontal,
                               children: [
+                                // существующие фото
                                 ...existingPhotos.map(
                                   (photo) => Container(
                                     margin: const EdgeInsets.all(8),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: Image.network(
-                                        '${ApiConstants.serverUrl}$photo',
-                                        width: 120,
-                                        fit: BoxFit.cover,
-                                      ),
+                                    child: Stack(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          child: Image.network(
+                                            '${ApiConstants.serverUrl}$photo',
+                                            width: 120,
+                                            height: 120,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        Positioned(
+                                          top: 0,
+                                          right: 0,
+                                          child: CircleAvatar(
+                                            radius: 14,
+                                            backgroundColor: Colors.red,
+                                            child: IconButton(
+                                              padding: EdgeInsets.zero,
+                                              iconSize: 14,
+                                              color: Colors.white,
+                                              icon: const Icon(Icons.close),
+                                              onPressed: () {
+                                                setState(() {
+                                                  existingPhotos.remove(photo);
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
+
+                                // новые фото
                                 ...selectedImages.map(
                                   (bytes) => Container(
                                     margin: const EdgeInsets.all(8),
@@ -380,6 +412,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                                       child: Image.memory(
                                         bytes,
                                         width: 120,
+                                        height: 120,
                                         fit: BoxFit.cover,
                                       ),
                                     ),

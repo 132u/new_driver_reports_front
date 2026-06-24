@@ -314,6 +314,23 @@ class _FinancialOperationsScreenState extends State<FinancialOperationsScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                if (isAdmin)
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () {
+                          openEditOperation(item);
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          deleteOperation(item.id);
+                        },
+                      ),
+                    ],
+                  ),
               ],
             ),
           ),
@@ -322,6 +339,57 @@ class _FinancialOperationsScreenState extends State<FinancialOperationsScreen> {
     );
   }
 
+  Future<void> deleteOperation(String id) async {
+  final response = await http.delete(
+    Uri.parse(
+      '${ApiConstants.baseUrl}/financial-operations/$id',
+    ),
+    headers: {
+      'Authorization': 'Bearer ${widget.token}',
+    },
+  );
+
+  if (response.statusCode == 200 ||
+      response.statusCode == 204) {
+    loadOperations();
+  }
+}
+
+Future<void> openEditOperation(
+  FinancialOperationDto operation,
+) async {
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => CreateFinancialOperationScreen(
+        token: widget.token,
+        role: widget.role,
+        type: operation.typeName,
+        operation: operation,
+      ),
+    ),
+  );
+
+  if (result == true) {
+    loadOperations();
+  }
+}
+  // Future<void> openEditOperation() async {
+  //   final result = await Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (_) => CreateFinancialOperationScreen(
+  //         token: widget.token,
+  //         role: widget.role,
+  //         operation: operation,
+  //       ),
+  //     ),
+  //   );
+
+  //   if (result == true) {
+  //     loadOperation();
+  //   }
+  // }
   // =====================================================
   // HELPERS
   // =====================================================
@@ -338,7 +406,9 @@ class _FinancialOperationsScreenState extends State<FinancialOperationsScreen> {
 // =====================================================
 
 class FinancialOperationDto {
-  // final String id;
+  final String id;
+
+  final String userId;
 
   final String date;
 
@@ -346,42 +416,45 @@ class FinancialOperationDto {
 
   final int type;
 
+  final String? comment;
+
   FinancialOperationDto({
+    required this.id,
+    required this.userId,
     required this.date,
     required this.amount,
     required this.type,
+    this.comment,
   });
-
-  String get typeName {
-    switch (type) {
-      case 0:
-        return 'Аванс';
-
-      case 1:
-        return 'Сдача денег';
-
-      case 2:
-        return 'Работа на базе';
-
-      case 3:
-        return 'Топливо';
-
-      default:
-        return 'Неизвестно';
-    }
-  }
 
   factory FinancialOperationDto.fromJson(
     Map<String, dynamic> json,
   ) {
     return FinancialOperationDto(
+      id: json['id'],
+      userId: json['userId'] ?? '',
       date: json['date'],
       amount: (json['amount'] as num).toDouble(),
       type: json['type'],
+      comment: json['comment'],
     );
   }
-}
 
+  String get typeName {
+    switch (type) {
+      case 0:
+        return 'Аванс';
+      case 1:
+        return 'Сдача денег';
+      case 2:
+        return 'Работа на базе';
+      case 3:
+        return 'Топливо';
+      default:
+        return 'Неизвестно';
+    }
+  }
+}
 // =====================================================
 // USER DTO
 // =====================================================

@@ -530,6 +530,7 @@ class ReportDto {
   final String description;
   final List<String> imagePaths;
   final String driverId;
+  final String driverName;
   ReportDto({
     required this.id,
     required this.reportDate,
@@ -540,6 +541,7 @@ class ReportDto {
     required this.description,
     required this.imagePaths,
     required this.driverId,
+    required this.driverName,
   });
 
   factory ReportDto.fromJson(
@@ -557,6 +559,7 @@ class ReportDto {
           ? []
           : List<String>.from(json['imagePaths']),
       driverId: json['driverId'] ?? '',
+      driverName: json['driverName'] ?? '',
     );
   }
 }

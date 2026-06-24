@@ -1,3 +1,5 @@
+import 'package:driver_reports_app/screens/financial_operations_screen.dart';
+
 import '../core/constants/api_constants.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
@@ -9,11 +11,13 @@ class CreateFinancialOperationScreen extends StatefulWidget {
   final String token;
   final String role;
   final String type;
+  final FinancialOperationDto? operation;
   const CreateFinancialOperationScreen({
     super.key,
     required this.token,
     required this.role,
     required this.type,
+    this.operation,
   });
 
   @override
@@ -23,9 +27,9 @@ class CreateFinancialOperationScreen extends StatefulWidget {
 
 class _CreateFinancialOperationScreenState
     extends State<CreateFinancialOperationScreen> {
-
+  bool get isEdit => widget.operation != null;
   final amountController = TextEditingController();
-  
+
   final commentController = TextEditingController();
 
   DateTime selectedDate = DateTime.now();
@@ -35,12 +39,25 @@ class _CreateFinancialOperationScreenState
   List<UserDto> drivers = [];
 
   String? selectedDriverId;
-
+  int operationType = 0;
   bool get isAdmin => widget.role == 'Admin';
-
   @override
   void initState() {
     super.initState();
+
+    if (widget.operation != null) {
+      final op = widget.operation!;
+
+      amountController.text = op.amount.toString();
+
+      commentController.text = op.comment ?? '';
+
+      selectedDate = DateTime.parse(op.date);
+
+      selectedDriverId = op.userId;
+
+      operationType = op.type;
+    }
 
     if (isAdmin) {
       loadDrivers();
@@ -67,9 +84,15 @@ class _CreateFinancialOperationScreenState
       setState(() {
         drivers = result;
 
-        if (drivers.isNotEmpty) {
-          selectedDriverId = drivers.first.id;
-        }
+        setState(() {
+          drivers = result;
+
+          if (widget.operation != null) {
+            selectedDriverId = widget.operation!.userId;
+          } else if (drivers.isNotEmpty) {
+            selectedDriverId = drivers.first.id;
+          }
+        });
       });
     }
   }
@@ -77,27 +100,80 @@ class _CreateFinancialOperationScreenState
   // =========================
   // CREATE
   // =========================
+  // Future<void> create() async {
+  //   setState(() {
+  //     isLoading = true;
+  //   });
+
+  //   final response = await http.post(
+  //     Uri.parse('${ApiConstants.baseUrl}/financial-operations'),
+  //     headers: {
+  //       'Authorization': 'Bearer ${widget.token}',
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: jsonEncode({
+  //       "userId": isAdmin ? selectedDriverId : null,
+  //       "date": selectedDate.toUtc().toIso8601String(),
+  //       "amount": double.parse(
+  //         amountController.text,
+  //       ),
+  //       "type": getOperationType(),
+  //       "comment": commentController.text,
+  //     }),
+  //   );
+
+  //   setState(() {
+  //     isLoading = false;
+  //   });
+
+  //   if (!mounted) return;
+
+  //   if (response.statusCode == 200 || response.statusCode == 201) {
+  //     Navigator.pop(context, true);
+  //   } else {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(
+  //           'Ошибка: ${response.statusCode}',
+  //         ),
+  //       ),
+  //     );
+  //   }
+  // }
   Future<void> create() async {
     setState(() {
       isLoading = true;
     });
 
-    final response = await http.post(
-      Uri.parse('${ApiConstants.baseUrl}/financial-operations'),
-      headers: {
-        'Authorization': 'Bearer ${widget.token}',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        "userId": isAdmin ? selectedDriverId : null,
-        "date": selectedDate.toUtc().toIso8601String(),
-        "amount": double.parse(
-          amountController.text,
-        ),
-        "type": getOperationType(),
-        "comment": commentController.text,
-      }),
-    );
+    final body = jsonEncode({
+      "userId": isAdmin ? selectedDriverId : null,
+      "date": selectedDate.toString().split(' ')[0],
+      "amount": double.parse(amountController.text),
+      "type": operationType,
+      "comment": commentController.text,
+    });
+
+    final response = isEdit
+        ? await http.put(
+            Uri.parse(
+              '${ApiConstants.baseUrl}/financial-operations/${widget.operation!.id}',
+            ),
+            headers: {
+              'Authorization': 'Bearer ${widget.token}',
+              'Content-Type': 'application/json',
+            },
+            body: body,
+          )
+        : await http.post(
+            Uri.parse(
+              '${ApiConstants.baseUrl}/financial-operations',
+            ),
+            headers: {
+              'Authorization': 'Bearer ${widget.token}',
+              'Content-Type': 'application/json',
+            },
+            body: body,
+          );
 
     setState(() {
       isLoading = false;
@@ -105,16 +181,10 @@ class _CreateFinancialOperationScreenState
 
     if (!mounted) return;
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
+    if (response.statusCode == 200 ||
+        response.statusCode == 201 ||
+        response.statusCode == 204) {
       Navigator.pop(context, true);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Ошибка: ${response.statusCode}',
-          ),
-        ),
-      );
     }
   }
 
@@ -165,7 +235,9 @@ class _CreateFinancialOperationScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Финансовая операция'),
+        title: Text(
+          isEdit ? 'Редактирование операции' : 'Финансовая операция',
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -250,7 +322,9 @@ class _CreateFinancialOperationScreenState
                 onPressed: isLoading ? null : create,
                 child: isLoading
                     ? const CircularProgressIndicator()
-                    : const Text('Создать'),
+                    : Text(
+                        isEdit ? 'Сохранить' : 'Создать',
+                      ),
               ),
             ),
           ],

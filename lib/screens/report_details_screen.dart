@@ -163,7 +163,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () {
-                openEditReport(report!);
+                openEditReport();
               },
             ),
           if (isAdmin && report != null)
@@ -242,7 +242,11 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
           const SizedBox(height: 24),
 
           // ================= MONEY HOLDER =================
-
+          buildInfoRow(
+            Icons.person,
+            'Водитель',
+            report!.driverName,
+          ),
           buildInfoRow(
             Icons.account_circle,
             'У кого деньги',
