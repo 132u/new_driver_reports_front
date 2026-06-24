@@ -1,3 +1,6 @@
+import 'package:driver_reports_app/screens/create_report_screen.dart';
+import 'package:driver_reports_app/screens/home_screen.dart';
+
 import '../core/constants/api_constants.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -20,7 +23,7 @@ class ReportDetailsScreen extends StatefulWidget {
 }
 
 class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
-  ReportDetailsDto? report;
+  ReportDto? report;
   bool get isAdmin => widget.role == 'Admin';
   bool isLoading = false;
   Future<void> deleteReport() async {
@@ -74,8 +77,19 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     }
   }
 
-  Future<void> openEditReport() async {
-    print(report!.id);
+  Future<void> openEditReport(
+    ReportDto report,
+  ) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreateReportScreen(
+          token: widget.token,
+          role: widget.role,
+          report: report,
+        ),
+      ),
+    );
   }
 
   @override
@@ -110,7 +124,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
       print(jsonEncode(json));
       print('IMAGE PATHS: ${json['imagePaths']}');
       setState(() {
-        report = ReportDetailsDto.fromJson(
+        report = ReportDto.fromJson(
           json,
         );
 
@@ -147,7 +161,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () {
-                openEditReport();
+                openEditReport(report!);
               },
             ),
           if (isAdmin && report != null)
@@ -194,7 +208,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
           const SizedBox(height: 8),
 
           Text(
-            formatDate(report!.date),
+            formatDate(report!.reportDate),
             style: const TextStyle(
               color: Colors.grey,
               fontSize: 16,
@@ -210,14 +224,14 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
               Expanded(
                 child: buildMoneyCard(
                   'Наличные',
-                  report!.cash,
+                  report!.paymentType == 0 ? report!.price : 0,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: buildMoneyCard(
                   'Безнал НДС',
-                  report!.nonCashWithVat,
+                  report!.paymentType == 1 ? report!.price : 0,
                 ),
               ),
             ],
@@ -238,7 +252,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
 
           // ================= COMMENT =================
 
-          if (report!.comment != null && report!.comment!.isNotEmpty)
+          if (report!.description != null && report!.description!.isNotEmpty)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -262,7 +276,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                     ),
                   ),
                   child: Text(
-                    report!.comment!,
+                    report!.description!,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -270,7 +284,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
             ),
 
           // ================= PHOTOS =================
-          if (report!.photos.isNotEmpty)
+          if (report!.imagePaths.isNotEmpty)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -286,9 +300,9 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                   height: 220,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    itemCount: report!.photos.length,
+                    itemCount: report!.imagePaths.length,
                     itemBuilder: (context, index) {
-                      final photo = report!.photos[index];
+                      final photo = report!.imagePaths[index];
                       print("photo print = $photo");
 
                       return Padding(
@@ -425,58 +439,5 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     final parsed = DateTime.parse(date);
 
     return '${parsed.day}.${parsed.month}.${parsed.year}';
-  }
-}
-
-// =====================================================
-// DTO
-// =====================================================
-
-class ReportDetailsDto {
-  final String id;
-
-  final String date;
-
-  final String clientName;
-
-  final double? cash;
-
-  final double? nonCashWithVat;
-
-  final int moneyHolder;
-
-  final String? comment;
-
-  final List<String> photos;
-// driverId
-// paymentType
-// price
-  ReportDetailsDto({
-    required this.id,
-    required this.date,
-    required this.clientName,
-    required this.cash,
-    required this.nonCashWithVat,
-    required this.moneyHolder,
-    this.comment,
-    required this.photos,
-  });
-
-  factory ReportDetailsDto.fromJson(
-    Map<String, dynamic> json,
-  ) {
-    return ReportDetailsDto(
-      id: json['id'],
-      date: json['reportDate'],
-      clientName: json['clientName'] ?? '',
-      cash: json['paymentType'] == 0 ? (json['price'] as num?)?.toDouble() : 0,
-      nonCashWithVat:
-          json['paymentType'] == 1 ? (json['price'] as num?)?.toDouble() : 0,
-      moneyHolder: json['moneyHolder'] ?? 0,
-      comment: json['description'] ?? '',
-      photos: List<String>.from(
-        json['imagePaths'] ?? [],
-      ),
-    );
   }
 }

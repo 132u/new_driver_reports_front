@@ -27,6 +27,7 @@ class CreateReportScreen extends StatefulWidget {
 
 class _CreateReportScreenState extends State<CreateReportScreen> {
   bool get isEdit => widget.report != null;
+  List<String> existingPhotos = [];
   final _formKey = GlobalKey<FormState>();
   File? selectedImage;
   List<Uint8List> selectedImages = [];
@@ -73,6 +74,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       paymentType = report.paymentType;
 
       moneyHolder = report.moneyHolder;
+      existingPhotos = report.imagePaths;
 
       selectedDate = DateTime.parse(report.reportDate);
     }
@@ -130,7 +132,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     }
     final data = {
       "driverId": isAdmin ? selectedDriverId : null,
-      "reportDate": selectedDate.toIso8601String(),
+      "reportDate": selectedDate.toLocal().toString().split(' ')[0],
       "price": int.parse(priceController.text),
       "description": descriptionController.text,
       "clientName": clientController.text,

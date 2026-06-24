@@ -375,6 +375,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 builder: (_) => ReportDetailsScreen(
                   reportId: item.id,
                   token: widget.token,
+                  role: widget.role,
                 ),
               ),
             );
