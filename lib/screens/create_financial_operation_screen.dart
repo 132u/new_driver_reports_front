@@ -149,10 +149,11 @@ class _CreateFinancialOperationScreenState
       "userId": isAdmin ? selectedDriverId : null,
       "date": selectedDate.toString().split(' ')[0],
       "amount": double.parse(amountController.text),
-      "type": operationType,
+      "type": getOperationType(),
       "comment": commentController.text,
     });
-
+print("widget.type = ${widget.type}");
+print("operationType = ${operationType}");
     final response = isEdit
         ? await http.put(
             Uri.parse(
@@ -198,13 +199,21 @@ class _CreateFinancialOperationScreenState
   int typeFromString(String type) {
     switch (type) {
       case 'Advance':
+      case 'Аванс':
         return 0;
+
       case 'Settlement':
+      case 'Сдача денег':
         return 1;
+
       case 'BaseWorkPayment':
+      case 'Работа на базе':
         return 2;
+
       case 'FuelExpense':
+      case 'Топливо':
         return 3;
+
       default:
         return 0;
     }
