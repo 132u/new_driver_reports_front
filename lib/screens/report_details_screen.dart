@@ -77,10 +77,8 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     }
   }
 
-  Future<void> openEditReport(
-    ReportDto report,
-  ) async {
-    final result = await Navigator.push(
+  Future<void> openEditReport() async {
+    final updated = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => CreateReportScreen(
@@ -90,6 +88,10 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
         ),
       ),
     );
+
+    if (updated == true) {
+      await loadReport();
+    }
   }
 
   @override

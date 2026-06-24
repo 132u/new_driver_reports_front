@@ -117,7 +117,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
 
   Future<void> createReport() async {
     if (!_formKey.currentState!.validate()) return;
-    List<String> imagePaths = [];
+    List<String> imagePaths = [...existingPhotos];
 
     if (isAdmin && selectedDriverId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -128,7 +128,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       return;
     }
     if (selectedImages.isNotEmpty) {
-      imagePaths = await reportService.uploadImages(selectedImages);
+      final uploaded = await reportService.uploadImages(selectedImages);
+
+      imagePaths.addAll(uploaded);
     }
     final data = {
       "driverId": isAdmin ? selectedDriverId : null,
@@ -350,22 +352,40 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                         color: Colors.grey[200],
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: selectedImages.isEmpty
-                          ? const Center(child: Text("Выбрать фото"))
-                          : ListView.builder(
+                      child: (selectedImages.isEmpty && existingPhotos.isEmpty)
+                          ? const Center(
+                              child: Text("Выбрать фото"),
+                            )
+                          : ListView(
                               scrollDirection: Axis.horizontal,
-                              itemCount: selectedImages.length,
-                              itemBuilder: (context, index) {
-                                final file = selectedImages[index];
-
-                                return Container(
-                                  margin: const EdgeInsets.all(8),
-                                  child: ClipRRect(
+                              children: [
+                                ...existingPhotos.map(
+                                  (photo) => Container(
+                                    margin: const EdgeInsets.all(8),
+                                    child: ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
-                                      child:
-                                          Image.memory(selectedImages[index])),
-                                );
-                              },
+                                      child: Image.network(
+                                        '${ApiConstants.serverUrl}$photo',
+                                        width: 120,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                ...selectedImages.map(
+                                  (bytes) => Container(
+                                    margin: const EdgeInsets.all(8),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.memory(
+                                        bytes,
+                                        width: 120,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                     ),
                   ),
