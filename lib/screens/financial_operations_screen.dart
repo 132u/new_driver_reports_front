@@ -271,16 +271,15 @@ class _FinancialOperationsScreenState extends State<FinancialOperationsScreen> {
       itemCount: operations.length,
       itemBuilder: (context, index) {
         final item = operations[index];
-
         return Card(
-          margin: const EdgeInsets.only(
-            bottom: 12,
-          ),
+          margin: const EdgeInsets.only(bottom: 12),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
+                // Левая часть
                 Expanded(
+                  flex: 3,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -291,46 +290,54 @@ class _FinancialOperationsScreenState extends State<FinancialOperationsScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(
-                        height: 8,
-                      ),
+                      const SizedBox(height: 8),
                       Text(
-                        formatDate(
-                          item.date,
-                        ),
-                        style: const TextStyle(
-                          color: Colors.grey,
-                        ),
+                        formatDate(item.date),
+                        style: const TextStyle(color: Colors.grey),
                       ),
                     ],
                   ),
                 ),
-                Text(
-                  item.amount.toStringAsFixed(
-                    2,
-                  ),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+
+                // Центр
+                Expanded(
+                  flex: 2,
+                  child: Center(
+                    child: Text(
+                      item.comment ?? '',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ),
-                if (isAdmin)
-                  Row(
-                    children: [
+
+                // Правая часть
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      item.amount.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (isAdmin) ...[
+                      const SizedBox(width: 8),
                       IconButton(
                         icon: const Icon(Icons.edit),
-                        onPressed: () {
-                          openEditOperation(item);
-                        },
+                        onPressed: () => openEditOperation(item),
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete),
-                        onPressed: () {
-                          deleteOperation(item.id);
-                        },
+                        onPressed: () => deleteOperation(item.id),
                       ),
                     ],
-                  ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -340,40 +347,39 @@ class _FinancialOperationsScreenState extends State<FinancialOperationsScreen> {
   }
 
   Future<void> deleteOperation(String id) async {
-  final response = await http.delete(
-    Uri.parse(
-      '${ApiConstants.baseUrl}/financial-operations/$id',
-    ),
-    headers: {
-      'Authorization': 'Bearer ${widget.token}',
-    },
-  );
-
-  if (response.statusCode == 200 ||
-      response.statusCode == 204) {
-    loadOperations();
-  }
-}
-
-Future<void> openEditOperation(
-  FinancialOperationDto operation,
-) async {
-  final result = await Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => CreateFinancialOperationScreen(
-        token: widget.token,
-        role: widget.role,
-        type: operation.typeName,
-        operation: operation,
+    final response = await http.delete(
+      Uri.parse(
+        '${ApiConstants.baseUrl}/financial-operations/$id',
       ),
-    ),
-  );
+      headers: {
+        'Authorization': 'Bearer ${widget.token}',
+      },
+    );
 
-  if (result == true) {
-    loadOperations();
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      loadOperations();
+    }
   }
-}
+
+  Future<void> openEditOperation(
+    FinancialOperationDto operation,
+  ) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreateFinancialOperationScreen(
+          token: widget.token,
+          role: widget.role,
+          type: operation.typeName,
+          operation: operation,
+        ),
+      ),
+    );
+
+    if (result == true) {
+      loadOperations();
+    }
+  }
   // Future<void> openEditOperation() async {
   //   final result = await Navigator.push(
   //     context,
