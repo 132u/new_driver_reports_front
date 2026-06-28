@@ -87,7 +87,7 @@ class _MainScreenState extends State<MainScreen> {
               ),
 
               // ================= ADMIN ONLY =================
-              if (isAdmin)
+              // if (isAdmin)
                 ListTile(
                   leading: const Icon(
                     Icons.payments,
