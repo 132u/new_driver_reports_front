@@ -107,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextField(
                       controller: emailController,
                       decoration: const InputDecoration(
-                        labelText: "Email",
+                        labelText: "Почта",
                         prefixIcon: Icon(Icons.email),
                         border: OutlineInputBorder(),
                       ),
@@ -117,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: passwordController,
                       obscureText: true,
                       decoration: const InputDecoration(
-                        labelText: "Password",
+                        labelText: "Пароль",
                         prefixIcon: Icon(Icons.lock),
                         border: OutlineInputBorder(),
                       ),
@@ -136,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () {
                         Navigator.pushNamed(context, '/register');
                       },
-                      child: const Text("Create account"),
+                      child: const Text("Еще нет аккаунта? Зарегистроваться"),
                     ),
                     const SizedBox(height: 5),
                   ],

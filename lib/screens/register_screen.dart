@@ -1,3 +1,4 @@
+import 'package:driver_reports_app/core/validators/email_validator.dart';
 import 'package:flutter/material.dart';
 import '../core/api/auth_service.dart';
 
@@ -18,11 +19,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void register() async {
     if (passwordController.text != confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Passwords do not match")),
+        const SnackBar(content: Text("Пароли не совпадают")),
       );
       return;
     }
-
+    if (!EmailValidator.IsRussianEmail(emailController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Регистрация с иностранных почтовых сервисов (gmali, hotmail and etc) недоступна.',
+          ),
+        ),
+      );
+      return;
+    }
     final success = await authService.register(
       nameController.text,
       emailController.text,
@@ -72,7 +82,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text(
-                          "Create Account",
+                          "Создать аккаунт",
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -85,7 +95,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         TextFormField(
                           controller: nameController,
                           decoration: const InputDecoration(
-                            labelText: "Name",
+                            labelText: "Имя",
                             prefixIcon: Icon(Icons.person),
                             border: OutlineInputBorder(),
                           ),
@@ -103,7 +113,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         TextFormField(
                           controller: emailController,
                           decoration: const InputDecoration(
-                            labelText: "Email",
+                            labelText: "Почта",
                             prefixIcon: Icon(Icons.email),
                             border: OutlineInputBorder(),
                           ),
@@ -129,7 +139,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controller: passwordController,
                           obscureText: true,
                           decoration: const InputDecoration(
-                            labelText: "Password",
+                            labelText: "Пароль",
                             prefixIcon: Icon(Icons.lock),
                             border: OutlineInputBorder(),
                           ),
@@ -148,7 +158,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controller: confirmPasswordController,
                           obscureText: true,
                           decoration: const InputDecoration(
-                            labelText: "Confirm Password",
+                            labelText: "Подтвердите пароль",
                             prefixIcon: Icon(Icons.lock_outline),
                             border: OutlineInputBorder(),
                           ),
@@ -182,7 +192,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           onPressed: () {
                             Navigator.pushReplacementNamed(context, '/login');
                           },
-                          child: const Text("Already have an account? Login"),
+                          child: const Text("Уже есть аккаунт? Войти"),
                         ),
                       ],
                     ),
